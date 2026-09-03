@@ -1,0 +1,2306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prototipo de Formulario — Módulos de Rodilla</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+.auth-gate{position:fixed;inset:0;background:
+    radial-gradient(circle at 20% 15%,rgba(15,184,153,.35) 0%,transparent 45%),
+    radial-gradient(circle at 85% 80%,rgba(212,128,48,.18) 0%,transparent 50%),
+    linear-gradient(150deg,#0d1f35 0%,#162d47 55%,#0b3a34 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;padding:20px;text-align:center}
+.auth-brand{margin-bottom:26px}
+.auth-brand .emoji{font-size:38px;line-height:1}
+.auth-brand h1{color:#fff;font-size:19px;font-weight:800;margin-top:10px;letter-spacing:.2px}
+.auth-brand p{color:#9db4c9;font-size:12px;margin-top:5px}
+.auth-card{background:#fff;border-radius:16px;padding:30px;max-width:340px;width:100%;box-shadow:0 24px 70px rgba(0,0,0,.45);border-top:4px solid var(--teal2,#0fb899)}
+.auth-card h2{font-size:16px;margin-bottom:4px;color:#1a2b3c}
+.auth-card p{font-size:11.5px;color:#8a9bb0;margin-bottom:16px}
+.auth-card input{width:100%;border:0.5px solid #c5d0de;border-radius:7px;padding:10px 12px;font-size:13px;margin-bottom:10px;font-family:inherit}
+.auth-card input:focus{outline:none;border-color:var(--teal2,#0fb899);box-shadow:0 0 0 3px rgba(15,184,153,.15)}
+.auth-card button{width:100%;background:linear-gradient(135deg,#0b8a72,#0fb899);color:#fff;border:none;border-radius:8px;padding:11px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.2px}
+.auth-card button:hover{filter:brightness(1.08)}
+.auth-error{font-size:11.5px;color:#c0392b;margin-top:8px;min-height:14px;font-weight:600}
+.user-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11px;color:#7a9ab8;margin-top:6px}
+.user-bar button{background:rgba(255,255,255,.12);color:#fff;border:0.5px solid rgba(255,255,255,.25);border-radius:6px;padding:4px 10px;font-size:10.5px;cursor:pointer;font-family:inherit}
+</style>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0d1f35;--navy2:#162d47;--teal:#0b8a72;--teal2:#0fb899;
+  --amber:#d48030;--red:#b83030;--blue:#1a56a0;--purple:#5e1fa0;
+  --bg:#ffffff;--bg2:#f4f6f9;--bg3:#eaf0f7;
+  --border:#dde4ed;--border2:#c5d0de;
+  --t1:#1a2b3c;--t2:#4a6070;--t3:#8a9bb0;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg2);color:var(--t1);min-height:100vh}
+.app-header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;padding:20px 24px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(13,31,53,.25)}
+.app-header h1{font-size:16px;font-weight:600}
+.app-header p{font-size:11px;color:#7a9ab8;margin-top:3px}
+.badge-proto{display:inline-block;background:var(--amber);color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:12px;margin-top:8px;letter-spacing:.4px;text-transform:uppercase}
+main{max-width:820px;margin:0 auto;padding:20px 16px 80px}
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.card-h{background:var(--navy);color:#fff;padding:10px 16px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card-h .n{background:var(--teal2);color:var(--navy);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.card-b{padding:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+@media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}}
+@media(max-width:700px){.grid4{grid-template-columns:1fr 1fr}}
+.pts-tec-label{font-size:10.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.3px;margin:8px 0 4px}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.field label{font-size:11.5px;font-weight:600;color:var(--navy)}
+.field input,.field select{border:0.5px solid var(--border2);border-radius:7px;padding:7px 10px;font-size:12.5px;color:var(--t1);background:var(--bg);font-family:inherit;width:100%}
+.field input:focus,.field select:focus{outline:none;border-color:var(--teal)}
+.check-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.chk{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--t2);cursor:pointer;transition:all .12s;line-height:1.3}
+.chk:hover{border-color:var(--teal);background:#f0fdf9}
+.chk input{accent-color:var(--teal);width:16px;height:16px;flex-shrink:0}
+.chk:has(input:checked){border-color:var(--teal);background:#f0fdf9;color:var(--navy);font-weight:700}
+.subsec{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 8px;padding-top:10px;border-top:0.5px solid var(--border)}
+.subsec:first-child{margin-top:0;padding-top:0;border-top:none}
+.laterality-box{background:#fff7ed;border:0.5px solid #fed7aa;border-radius:9px;padding:10px 12px;margin-bottom:14px}
+.laterality-box label{font-size:11.5px;font-weight:700;color:#92400e}
+.laterality-box select{margin-top:4px}
+.module-toggle{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:600px){.module-toggle{grid-template-columns:repeat(2,1fr)}}
+.module-btn{padding:11px 8px;border-radius:9px;border:1.5px solid var(--border2);background:var(--bg);cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;color:var(--t2);text-align:center;transition:all .15s;line-height:1.3}
+.module-btn.active{border-color:var(--teal);background:#f0fdf9;color:var(--teal)}
+.module-panel{display:none}
+.module-panel.active{display:block}
+.conditional{display:none;margin-top:8px;padding:10px 12px;background:var(--bg2);border-radius:8px;border:0.5px solid var(--border)}
+.conditional.show{display:block}
+.visit-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.visit-tab{padding:8px 14px;border-radius:8px;border:1.5px solid var(--border2);background:var(--bg);cursor:pointer;font-size:12px;font-weight:600;color:var(--t2)}
+.visit-tab.active{border-color:var(--navy);background:var(--navy);color:#fff}
+.visit-tab[data-special-visit]{display:none}
+.scale-box{border:0.5px solid var(--border);border-radius:9px;padding:12px;margin-bottom:10px;background:var(--bg2);display:none}
+.scale-box.show{display:block}
+.scale-box-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.scale-name{font-size:12.5px;font-weight:700;color:var(--navy)}
+.scale-opt-badge{font-size:9.5px;background:var(--t3);color:#fff;padding:2px 7px;border-radius:10px;font-weight:700;text-transform:uppercase}
+.scale-opt-badge.required{background:var(--teal)}
+.scale-inputs{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.expand-btn{background:var(--bg3);border:0.5px solid var(--border2);color:var(--navy);border-radius:7px;padding:7px 12px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.expand-btn:hover{background:var(--teal);color:#fff;border-color:var(--teal)}
+.expand-btn:disabled{opacity:.4;cursor:not-allowed}
+.questionnaire{display:none;margin-top:12px;padding-top:12px;border-top:0.5px dashed var(--border2)}
+.questionnaire.show{display:block}
+.q-block{background:var(--bg);border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.q-label{font-size:11.5px;font-weight:600;margin-bottom:6px;color:var(--t1)}
+.q-opts{display:flex;flex-direction:column;gap:4px}
+.q-opt{display:flex;align-items:center;gap:8px;padding:6px 9px;border:0.5px solid var(--border);border-radius:7px;font-size:11px;color:var(--t2);cursor:pointer}
+.q-opt:hover{border-color:var(--teal);background:#f0fdf9}
+.q-opt input{accent-color:var(--teal)}
+.q-pts{margin-left:auto;font-size:10px;font-weight:700;color:var(--t3)}
+.q-domain-title{font-size:11px;font-weight:700;color:var(--navy);margin:12px 0 6px;padding-top:8px;border-top:0.5px dashed var(--border2)}
+.q-domain-title:first-child{margin-top:0;padding-top:0;border-top:none}
+.q-vas-scale{display:flex;align-items:center;gap:8px}
+.q-vas-anchor{font-size:10px;color:var(--t2);flex-shrink:0;width:92px;line-height:1.3}
+.q-vas-anchor.right{text-align:right}
+.q-vas-scale input[type=range]{flex:1;accent-color:var(--teal)}
+.q-vas-val{font-size:11px;font-weight:700;color:var(--navy);width:30px;text-align:center;flex-shrink:0}
+.q-vas-na{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--t2);margin:6px 0}
+.q-vas-na input{accent-color:var(--teal)}
+.btn-row{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.btn{border:none;border-radius:9px;padding:11px 16px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.btn-primary{background:var(--navy);color:#fff;flex:1;min-width:160px}
+.btn-primary:hover{background:var(--teal)}
+.btn-secondary{background:var(--bg2);border:0.5px solid var(--border2);color:var(--t2)}
+.btn-secondary:hover{color:var(--t1);border-color:var(--t1)}
+.opt-toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2);margin-bottom:8px}
+.opt-toggle input{accent-color:var(--teal);width:15px;height:15px}
+table.visits{width:100%;border-collapse:collapse;font-size:11px;margin-top:10px}
+table.visits th{background:var(--navy);color:#fff;padding:6px 8px;text-align:left;font-size:10.5px}
+table.visits td{padding:6px 8px;border-bottom:0.5px solid var(--border)}
+.hint{font-size:10.5px;color:var(--t3);margin-top:4px;line-height:1.5}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:9px;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+.sign-hint{font-size:10px;color:var(--amber);margin-top:2px}
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="auth-gate" style="display:none">
+  <div class="auth-brand">
+    <div class="emoji">🦵</div>
+    <h1>Registro de Cirugías de Rodilla</h1>
+    <p>Base de datos multicéntrica · Dr. Juan David Parra</p>
+  </div>
+  <div class="auth-card" id="login-card">
+    <h2>Iniciar sesión</h2>
+    <p>Acceso solo por invitación.</p>
+    <input type="email" id="login-email" placeholder="Correo" autocomplete="username">
+    <input type="password" id="login-password" placeholder="Contraseña" autocomplete="current-password">
+    <button type="button" onclick="login()">Entrar</button>
+    <div class="auth-error" id="login-error"></div>
+    <button type="button" id="reset-link-btn" onclick="sendPasswordReset()" style="background:none;border:none;color:var(--teal2,#0fb899);font-size:11.5px;cursor:pointer;text-decoration:underline;padding:0;margin-top:12px;font-family:inherit">¿Olvidaste tu contraseña?</button>
+    <div class="auth-error" id="reset-feedback" style="margin-top:6px"></div>
+  </div>
+  <div class="auth-card" id="recovery-card" style="display:none">
+    <h2>Restablecer contraseña</h2>
+    <p>Escribe tu nueva contraseña.</p>
+    <input type="password" id="recovery-password" placeholder="Nueva contraseña" autocomplete="new-password">
+    <input type="password" id="recovery-password2" placeholder="Confirmar contraseña" autocomplete="new-password">
+    <button type="button" onclick="submitNewPassword()">Guardar nueva contraseña</button>
+    <div class="auth-error" id="recovery-error"></div>
+  </div>
+</div>
+
+<div class="app-header">
+  <h1>Prototipo de Formulario de Registro — Módulos de Rodilla</h1>
+  <p>Dr. Juan David Parra · Base de datos multicéntrica de rodilla</p>
+  <span class="badge-proto">Conectado a Supabase</span>
+  <div class="user-bar"><span id="user-email"></span><button type="button" onclick="logout()">Cerrar sesión</button></div>
+</div>
+
+<main id="app-root" style="display:none">
+
+  
+
+  <!-- 1. IDENTIFICACIÓN -->
+  <div class="card">
+    <div class="card-h"><span class="n">1</span>Identificación</div>
+    <div class="card-b">
+      <div class="grid2">
+        <div class="field"><label>Código de estudio *</label><input id="codigo_estudio" placeholder="Ej: RH-0001"></div>
+        <div class="field"><label>Institución</label>
+          <select id="institucion"><option value="">Seleccionar</option><option>Clínica Imbanaco</option><option>Clínica MED</option><option>Fundación Valle del Lili</option><option>Hospital San Juan de Dios</option><option>Clínica Farallones</option><option>Clínica Palma Real</option><option>Sportsmeds</option><option>Otra</option></select>
+        </div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Cédula</label><input id="cedula" placeholder="Solo dígitos"></div>
+        <div class="field"><label>Fecha de registro</label><input type="date" id="fecha_registro"></div>
+        <div class="field"></div>
+      </div>
+      <p class="hint">El cirujano responsable ya no se escribe aquí — se infiere automáticamente de tu sesión autenticada al guardar. La cédula queda protegida por permisos por fila: cada cirujano ve la cédula solo de sus propios pacientes; en exportaciones/estudios multicéntricos únicamente sale el código de estudio, nunca la cédula. <strong>El código de estudio debe ser autogenerado, no iniciales ni fragmentos de la cédula.</strong></p>
+    </div>
+  </div>
+
+  <!-- 2. DEMOGRÁFICOS -->
+  <div class="card">
+    <div class="card-h"><span class="n">2</span>Demográficos y preoperatorios</div>
+    <div class="card-b">
+      <div class="grid3">
+        <div class="field"><label>Edad</label><input type="number" id="edad" min="0"></div>
+        <div class="field"><label>Sexo</label><select id="sexo"><option value="">Seleccionar</option><option>Masculino</option><option>Femenino</option></select></div>
+        <div class="field"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Peso (kg)</label><input type="number" step="0.1" id="peso" min="0"></div>
+        <div class="field"><label>Talla (cm)</label><input type="number" step="0.1" id="talla" min="0"></div>
+        <div class="field"><label>IMC (calculado)</label><input type="text" id="imc" readonly placeholder="—" style="background:var(--bg2);font-weight:700;color:var(--navy)"></div>
+      </div>
+      <div class="field">
+        <label>Mecanismo de lesión</label>
+        <select id="mecanismo"><option value="">Seleccionar</option><option>Trauma deportivo</option><option>Accidente de tránsito</option><option>Caída de altura</option><option>Caída a nivel / mecanismo indirecto</option><option>No traumático / degenerativo</option><option>Otro</option></select>
+      </div>
+      <div class="field" id="deporte_wrap" style="display:none">
+        <label>Deporte practicado</label>
+        <select id="deporte"><option value="">Seleccionar</option><option>Fútbol</option><option>Baloncesto</option><option>Voleibol</option><option>Artes marciales / combate</option><option>Running</option><option>Ciclismo</option><option>Otro deporte</option></select>
+      </div>
+      <div class="field">
+        <label>Comorbilidades</label>
+        <div class="check-grid">
+          <label class="chk"><input type="checkbox" name="comorb" value="Diabetes">Diabetes</label>
+          <label class="chk"><input type="checkbox" name="comorb" value="Hipertensión">Hipertensión</label>
+          <label class="chk"><input type="checkbox" name="comorb" value="Tabaquismo">Tabaquismo</label>
+          <label class="chk"><input type="checkbox" name="comorb" value="Obesidad">Obesidad</label>
+          <label class="chk"><input type="checkbox" name="comorb" value="ERC">Enf. renal crónica</label>
+          <label class="chk"><input type="checkbox" name="comorb" value="AR">Artritis reumatoide</label>
+          <label class="chk"><input type="checkbox" name="comorb" value="Ninguna">Ninguna</label>
+          <label class="chk"><input type="checkbox" name="comorb" value="Otra">Otra</label>
+        </div>
+      </div>
+      <p class="hint">La lateralidad ya no va aquí — se captura dentro de cada módulo de cirugía (ver abajo), porque un mismo paciente puede tener registros de rodillas distintas en momentos distintos.</p>
+    </div>
+  </div>
+
+  <!-- 3. TIPO DE CIRUGÍA -->
+  <div class="card">
+    <div class="card-h"><span class="n">3</span>Tipo de cirugía</div>
+    <div class="card-b">
+      <div class="module-toggle">
+        <button type="button" class="module-btn active" id="btn-mod-lca" onclick="setModule('lca')">LCA</button>
+        <button type="button" class="module-btn" id="btn-mod-meniscal" onclick="setModule('meniscal')">Meniscal</button>
+        <button type="button" class="module-btn" id="btn-mod-atr" onclick="setModule('atr')">ATR</button>
+        <button type="button" class="module-btn" id="btn-mod-osteotomia" onclick="setModule('osteotomia')">Osteotomía</button>
+        <button type="button" class="module-btn" id="btn-mod-multiligamentaria" onclick="setModule('multiligamentaria')">Multiligamentaria</button>
+        <button type="button" class="module-btn" id="btn-mod-patelofemoral" onclick="setModule('patelofemoral')">Patelofemoral (inestabilidad)</button>
+        <button type="button" class="module-btn" id="btn-mod-mecext" onclick="setModule('mecext')">Mecanismo extensor</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4A. LCA -->
+  <div class="card module-panel active" id="panel-lca">
+    <div class="card-h"><span class="n">4</span>Módulo LCA — lesión asociada y técnica quirúrgica</div>
+    <div class="card-b">
+      <div class="grid2">
+        <div class="laterality-box" style="margin:0"><label>Rodilla operada</label><select id="lca_lateralidad"><option value="">Seleccionar</option><option>Derecha</option><option>Izquierda</option><option>Bilateral</option></select></div>
+        <div class="field"><label>Tiempo lesión-cirugía (meses)</label><input type="number" id="tiempo_lesion_cirugia" min="0"></div>
+      </div>
+
+      <div class="subsec">Lesión asociada</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Menisco medial afectado</label>
+          <select id="lca_menisco_medial" onchange="toggleCond('lca_menisco_medial','isakos_medial_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="isakos_medial_wrap">
+          <label>Tipo de lesión (ISAKOS) — medial</label>
+          <select id="isakos_medial"><option value="">Seleccionar</option><option>Radial</option><option>Longitudinal</option><option>Asa de balde</option><option>Lesión en rampa (unión meniscocapsular)</option><option>Raíz meniscal</option><option>Compleja</option><option>Otra</option></select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Menisco lateral afectado</label>
+          <select id="lca_menisco_lateral" onchange="toggleCond('lca_menisco_lateral','isakos_lateral_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="isakos_lateral_wrap">
+          <label>Tipo de lesión (ISAKOS) — lateral</label>
+          <select id="isakos_lateral"><option value="">Seleccionar</option><option>Radial</option><option>Longitudinal</option><option>Asa de balde</option><option>Raíz meniscal</option><option>Compleja</option><option>Otra</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Lesión condral</label>
+        <select id="lca_condral" onchange="toggleCond('lca_condral','condral_ubic_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+      <div class="conditional" id="condral_ubic_wrap">
+        <div class="field">
+          <label>Ubicación (marcar todas las afectadas)</label>
+          <div class="check-grid">
+            <label class="chk"><input type="checkbox" name="condral_ubicacion" value="Cóndilo femoral medial">Cóndilo femoral medial</label>
+            <label class="chk"><input type="checkbox" name="condral_ubicacion" value="Cóndilo femoral lateral">Cóndilo femoral lateral</label>
+            <label class="chk"><input type="checkbox" name="condral_ubicacion" value="Tróclea">Tróclea</label>
+            <label class="chk"><input type="checkbox" name="condral_ubicacion" value="Platillo tibial medial">Platillo tibial medial</label>
+            <label class="chk"><input type="checkbox" name="condral_ubicacion" value="Platillo tibial lateral">Platillo tibial lateral</label>
+            <label class="chk"><input type="checkbox" name="condral_ubicacion" value="Rótula">Rótula</label>
+          </div>
+        </div>
+        <div class="field"><label>Grado ICRS (lesión más severa)</label><select id="condral_icrs"><option value="">Seleccionar</option><option>0 — Normal</option><option>I — Reblandecimiento/fisuras superficiales</option><option>II — Lesión &lt;50% del espesor</option><option>III — Lesión &gt;50% del espesor (sin hueso subcondral expuesto)</option><option>IV — Hueso subcondral expuesto</option></select></div>
+      </div>
+
+      <div class="subsec">Técnica quirúrgica</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Remanente del LCA nativo identificado</label>
+          <select id="lca_remanente" onchange="toggleCond('lca_remanente','lca_remanente_preserv_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="lca_remanente_preserv_wrap">
+          <label>¿Se preservó el remanente?</label>
+          <select id="lca_remanente_preservado"><option value="">Seleccionar</option><option>Sí</option><option>No</option></select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Tipo de injerto</label><select id="injerto" onchange="toggleGraftDiam()"><option value="">Seleccionar</option><option>HTH</option><option>Isquiotibiales</option><option>Peroneo largo</option><option>Cuádriceps</option><option>Recto femoral</option><option>Aloinjerto</option></select></div>
+        <div class="field"><label>Técnica túnel femoral</label><select id="tunel_femoral"><option value="">Seleccionar</option><option>Portal medial</option><option>Transtibial</option><option>Fuera-adentro</option></select></div>
+      </div>
+      <div class="grid2" id="injerto_diam_wrap">
+        <div class="field"><label>Diámetro del injerto (mm)</label><input type="number" step="0.5" id="injerto_diametro" min="0"></div>
+        <div class="field conditional" id="injerto_fasciculos_wrap"><label>N.º de fascículos (tejido blando)</label><select id="injerto_fasciculos"><option value="">Seleccionar</option><option>2 (duplicado)</option><option>3 (triplicado)</option><option>4 (cuadruplicado)</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Fijación femoral</label><select id="fijacion_femoral"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Suspensión</option></select></div>
+        <div class="field"><label>Fijación tibial</label><select id="fijacion_tibial"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Suspensión</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Fijación tibial secundaria</label>
+          <select id="fij_tib_sec" onchange="toggleCond('fij_tib_sec','fij_tib_sec_tipo_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="fij_tib_sec_tipo_wrap">
+          <label>Tipo</label>
+          <select id="fij_tib_sec_tipo"><option value="">Seleccionar</option><option>Tornillo</option><option>Grapa</option><option>Arandela/poste</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Gesto asociado</label>
+        <div class="check-grid">
+          <label class="chk"><input type="checkbox" name="gesto" value="Sutura meniscal medial">Sutura meniscal medial</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="Sutura meniscal lateral">Sutura meniscal lateral</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="Meniscectomía medial">Meniscectomía medial</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="Meniscectomía lateral">Meniscectomía lateral</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="Condroplastia">Condroplastia</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="OATS">OATS</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="Ninguno">Ninguno</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Refuerzo anterolateral</label>
+        <select id="refuerzo_al" onchange="toggleCond('refuerzo_al','refuerzo_al_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+      <div class="grid2 conditional" id="refuerzo_al_wrap">
+        <div class="field"><label>Tipo</label><select id="refuerzo_al_tipo"><option value="">Seleccionar</option><option>Tenodesis tipo Lemaire</option><option>Reconstrucción de ligamento anterolateral</option></select></div>
+        <div class="field"><label>Fijación</label><select id="refuerzo_al_fijacion"><option value="">Seleccionar</option><option>Ancla</option><option>Tornillo</option><option>Grapa</option></select></div>
+      </div>
+
+      <div class="subsec">Estabilidad objetiva (instrumentada)</div>
+      <div class="grid2">
+        <div class="field"><label>Instrumento usado</label>
+          <select id="lca_estab_instrumento"><option value="No realizado">No realizado</option><option>KT-1000</option><option>KT-2000</option><option>GNRB</option><option>Rolimeter</option><option>Otro</option></select>
+        </div>
+        <div class="field"><label>Diferencia lado-lado (mm)</label><input type="number" step="0.1" id="lca_estab_mm" placeholder="Opcional"></div>
+      </div>
+      <div class="field"><label>Tiempo quirúrgico total (minutos)</label><input type="number" id="lca_tiempo_qx" min="0"></div>
+    </div>
+  </div>
+
+  <!-- 4B. MENISCAL -->
+  <div class="card module-panel" id="panel-meniscal">
+    <div class="card-h"><span class="n">4</span>Módulo Meniscal — lesión y técnica quirúrgica</div>
+    <div class="card-b">
+      <div class="laterality-box"><label>Rodilla operada</label><select id="men_lateralidad"><option value="">Seleccionar</option><option>Derecha</option><option>Izquierda</option><option>Bilateral</option></select></div>
+
+      <div class="subsec">Lesión meniscal</div>
+      <div class="grid2">
+        <div class="field"><label>Menisco afectado</label><select id="men_afectado"><option value="">Seleccionar</option><option>Medial</option><option>Lateral</option><option>Ambos</option></select></div>
+        <div class="field"><label>Estabilidad de la rotura</label><select id="men_estabilidad"><option value="">Seleccionar</option><option>Estable</option><option>Inestable</option></select></div>
+      </div>
+      <div class="field">
+        <label>Localización (puede marcar varias — p. ej. asa de balde extendida)</label>
+        <div class="check-grid">
+          <label class="chk"><input type="checkbox" name="men_loc" value="Cuerno anterior">Cuerno anterior</label>
+          <label class="chk"><input type="checkbox" name="men_loc" value="Cuerpo">Cuerpo</label>
+          <label class="chk"><input type="checkbox" name="men_loc" value="Cuerno posterior">Cuerno posterior</label>
+          <label class="chk"><input type="checkbox" name="men_loc" value="Raíz">Raíz</label>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Patrón de rotura</label>
+          <select id="men_patron"><option value="">Seleccionar</option><option>Longitudinal/vertical</option><option>Radial</option><option>Horizontal</option><option>Asa de balde</option><option>Lesión en rampa (unión meniscocapsular)</option><option>Colgajo (flap)</option><option>Compleja/degenerativa</option><option>Rotura de raíz</option></select>
+        </div>
+        <div class="field"><label>Zona vascular (Cooper)</label>
+          <select id="men_zona"><option value="">Seleccionar</option><option>Roja-roja</option><option>Roja-blanca</option><option>Blanca-blanca</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Longitud de la rotura (mm) — opcional</label><input type="number" step="0.1" id="men_longitud"></div>
+
+      <div class="subsec">Técnica quirúrgica</div>
+      <div class="check-grid" style="margin-bottom:10px">
+        <label class="chk"><input type="checkbox" name="men_tecnica" value="Meniscectomía parcial" onchange="toggleCond2(this,'meniscectomia_wrap')">Meniscectomía parcial</label>
+        <label class="chk"><input type="checkbox" name="men_tecnica" value="Sutura meniscal" onchange="toggleCond2(this,'sutura_wrap')">Sutura meniscal</label>
+        <label class="chk"><input type="checkbox" name="men_tecnica" value="Reparación de raíz" onchange="toggleCond2(this,'raiz_wrap')">Reparación de raíz</label>
+        <label class="chk"><input type="checkbox" name="men_tecnica" value="Reparación de rotura radial" onchange="toggleCond2(this,'radial_wrap')">Reparación de rotura radial</label>
+        <label class="chk"><input type="checkbox" name="men_tecnica" value="Ninguno / observación">Ninguno / observación</label>
+      </div>
+
+      <div class="conditional" id="meniscectomia_wrap">
+        <div class="field"><label>% aproximado de menisco resecado</label>
+          <select id="men_pct_resecado"><option value="">Seleccionar</option><option>&lt;1/3</option><option>1/3–2/3</option><option>&gt;2/3</option></select>
+        </div>
+      </div>
+
+      <div class="conditional" id="raiz_wrap">
+        <div class="field"><label>Técnica</label>
+          <select id="raiz_tecnica" onchange="toggleRaizTecnica()">
+            <option value="">Seleccionar</option>
+            <option value="Transtibial">Transtibial (pull-out)</option>
+            <option value="Anclaje">Sutura de anclaje</option>
+          </select>
+        </div>
+        <div class="field conditional" id="raiz_anclaje_wrap"><label>Número de anclas</label><input type="number" min="0" id="raiz_num_anclas"></div>
+        <div class="grid3 conditional" id="raiz_transtibial_wrap">
+          <div class="field"><label>Número de túneles</label><input type="number" min="0" id="raiz_num_tuneles"></div>
+          <div class="field"><label>Número de suturas</label><input type="number" min="0" id="raiz_num_suturas"></div>
+          <div class="field"><label>Fijación distal</label><select id="raiz_fijacion_distal"><option value="">Seleccionar</option><option>Botón</option><option>Knotless</option><option>Tornillo y arandela</option><option>Anudado con puente óseo</option></select></div>
+        </div>
+      </div>
+
+      <div class="conditional" id="radial_wrap">
+        <div class="field">
+          <label>Constructo (puede marcar varios — reparaciones híbridas)</label>
+          <div class="check-grid">
+            <label class="chk"><input type="checkbox" name="radial_constructo" value="Puntos horizontales" onchange="toggleRadialPtsField('horiz')">Puntos horizontales</label>
+            <label class="chk"><input type="checkbox" name="radial_constructo" value="Cross-tag" onchange="toggleRadialPtsField('crosstag')">Cross-tag</label>
+            <label class="chk"><input type="checkbox" name="radial_constructo" value="Hashtag" onchange="toggleRadialPtsField('hashtag')">Hashtag</label>
+            <label class="chk"><input type="checkbox" name="radial_constructo" value="Cruzados en X" onchange="toggleRadialPtsField('x')">Cruzados en X</label>
+            <label class="chk"><input type="checkbox" name="radial_constructo" value="Técnica transtibial" onchange="toggleRadialTranstibial()">Técnica transtibial</label>
+          </div>
+        </div>
+        <div id="radial_pts_por_constructo"></div>
+
+        <div class="conditional" id="radial_transtibial_wrap">
+          <div class="field">
+            <label>Sub-técnica transtibial (puede marcar varias)</label>
+            <div class="check-grid">
+              <label class="chk"><input type="checkbox" name="radial_tt_tec" value="Horizontal transtibial" onchange="toggleRadialPtsField('tt_horiz')">Puntos horizontales</label>
+              <label class="chk"><input type="checkbox" name="radial_tt_tec" value="Cruzados/X transtibial" onchange="toggleRadialPtsField('tt_x')">Puntos cruzados / en X</label>
+              <label class="chk"><input type="checkbox" name="radial_tt_tec" value="Rip-stop transtibial" onchange="toggleRadialPtsField('tt_ripstop')">Rip-stop (cross-tag o hashtag)</label>
+            </div>
+          </div>
+          <div class="grid3">
+            <div class="field conditional" id="radial_pts_tt_horiz_wrap"><label>Puntos — horizontal transtibial</label><input type="number" min="0" id="radial_pts_tt_horiz" oninput="updateRadialPuntos()"></div>
+            <div class="field conditional" id="radial_pts_tt_x_wrap"><label>Puntos — cruzados/X transtibial</label><input type="number" min="0" id="radial_pts_tt_x" oninput="updateRadialPuntos()"></div>
+            <div class="field conditional" id="radial_pts_tt_ripstop_wrap"><label>Puntos — rip-stop transtibial</label><input type="number" min="0" id="radial_pts_tt_ripstop" oninput="updateRadialPuntos()"></div>
+          </div>
+          <div class="field"><label>Fijación distal</label><select id="radial_tt_fijacion_distal"><option value="">Seleccionar</option><option>Botón</option><option>Knotless</option><option>Tornillo y arandela</option><option>Anudado con puente óseo</option></select></div>
+        </div>
+
+        <div class="field"><label>Número total de puntos</label><input type="number" id="radial_puntos_total" min="0"></div>
+      </div>
+
+      <div class="conditional" id="sutura_wrap">
+        <div class="field">
+          <label>Técnica(s) de sutura (puede marcar varias — reparaciones híbridas)</label>
+          <div class="check-grid">
+            <label class="chk"><input type="checkbox" name="sutura_tec" value="Todo-dentro" onchange="toggleSuturaPtsField('todo')">Todo-dentro (dispositivo)</label>
+            <label class="chk"><input type="checkbox" name="sutura_tec" value="Todo-dentro (pinza y anudado)" onchange="toggleSuturaPtsField('todopinza')">Todo-dentro (pinza y anudado)</label>
+            <label class="chk"><input type="checkbox" name="sutura_tec" value="Dentro-afuera" onchange="toggleSuturaPtsField('df')">Dentro-afuera</label>
+            <label class="chk"><input type="checkbox" name="sutura_tec" value="Fuera-adentro" onchange="toggleSuturaPtsField('fd')">Fuera-adentro</label>
+          </div>
+        </div>
+        <div class="grid4">
+          <div class="field conditional" id="sutura_pts_todo_wrap"><label>Puntos — todo-dentro</label><input type="number" min="0" id="sutura_pts_todo" oninput="updateSuturaPuntos()"></div>
+          <div class="field conditional" id="sutura_pts_todopinza_wrap"><label>Puntos — pinza y anudado</label><input type="number" min="0" id="sutura_pts_todopinza" oninput="updateSuturaPuntos()"></div>
+          <div class="field conditional" id="sutura_pts_df_wrap"><label>Puntos — dentro-afuera</label><input type="number" min="0" id="sutura_pts_df" oninput="updateSuturaPuntos()"></div>
+          <div class="field conditional" id="sutura_pts_fd_wrap"><label>Puntos — fuera-adentro</label><input type="number" min="0" id="sutura_pts_fd" oninput="updateSuturaPuntos()"></div>
+        </div>
+        <div class="field"><label>Número total de puntos</label><input type="number" id="sutura_puntos" min="0"></div>
+      </div>
+
+      <div class="field" style="margin-top:6px">
+        <label>Refuerzo biológico</label>
+        <select id="refuerzo_bio" onchange="toggleCond('refuerzo_bio','refuerzo_bio_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+      <div class="field conditional" id="refuerzo_bio_wrap">
+        <label>Tipo (puede marcar varios)</label>
+        <div class="check-grid">
+          <label class="chk"><input type="checkbox" name="bio_tipo" value="Trephination">Trephination</label>
+          <label class="chk"><input type="checkbox" name="bio_tipo" value="Coágulo de fibrina">Coágulo de fibrina</label>
+          <label class="chk"><input type="checkbox" name="bio_tipo" value="PRP">PRP</label>
+          <label class="chk"><input type="checkbox" name="bio_tipo" value="Aspirado de médula ósea">Aspirado de médula ósea / sangre mesenquimal</label>
+        </div>
+      </div>
+
+      <div class="field"><label>Tiempo quirúrgico total (minutos)</label><input type="number" id="men_tiempo_qx" min="0"></div>
+    </div>
+  </div>
+
+  <!-- 4C. ATR -->
+  <div class="card module-panel" id="panel-atr">
+    <div class="card-h"><span class="n">4</span>Módulo ATR — artroplastia total de rodilla</div>
+    <div class="card-b">
+      <div class="laterality-box"><label>Rodilla operada</label><select id="atr_lateralidad"><option value="">Seleccionar</option><option>Derecha</option><option>Izquierda</option><option>Bilateral</option></select></div>
+
+      <div class="subsec">Preoperatorio</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Cirugías previas en la rodilla</label>
+          <select id="atr_cx_previa" onchange="toggleCond('atr_cx_previa','atr_cx_previa_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="atr_cx_previa_wrap">
+          <label>Tipo + fecha</label>
+          <input id="atr_cx_previa_detalle" placeholder="Ej: meniscectomía, 2019">
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Infiltraciones previas</label>
+          <select id="atr_infilt_previa" onchange="toggleCond('atr_infilt_previa','atr_infilt_previa_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="atr_infilt_previa_wrap">
+          <label>Fecha + sustancia</label>
+          <select id="atr_infilt_sustancia"><option value="">Seleccionar</option><option>Corticoide</option><option>Ácido hialurónico</option><option>PRP</option><option>Otro</option></select>
+        </div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Deformidad angular</label><select id="atr_deformidad_dir"><option value="">Seleccionar</option><option>Varo</option><option>Valgo</option><option>Neutro</option></select></div>
+        <div class="field"><label>Grados</label><input type="number" step="0.1" id="atr_deformidad_grados"></div>
+      </div>
+
+      <div class="subsec">Implante — trazabilidad</div>
+      <div class="grid2">
+        <div class="field"><label>Marca de la prótesis</label><input id="atr_marca" placeholder="Para trazabilidad"></div>
+        <div class="field"><label>Tipo de prótesis</label><select id="atr_tipo"><option value="">Seleccionar</option><option>Cruciate-retaining (CR)</option><option>Posterior-stabilized (PS)</option><option>Pivote medial</option><option>Otra</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Fijación</label><select id="atr_fijacion"><option value="">Seleccionar</option><option>Cementada</option><option>No cementada</option><option>Híbrida</option></select></div>
+        <div class="field"><label>Polietileno</label><select id="atr_polietileno"><option value="">Seleccionar</option><option>Convencional</option><option>Altamente entrecruzado (highly cross-linked)</option></select></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Tamaño comp. femoral</label><input id="atr_talla_femoral"></div>
+        <div class="field"><label>Tamaño comp. tibial</label><input id="atr_talla_tibial"></div>
+        <div class="field"><label>Tamaño inserto</label><input id="atr_talla_inserto"></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Cambio de botón patelar</label>
+          <select id="atr_boton_patelar" onchange="toggleCond('atr_boton_patelar','atr_boton_patelar_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="atr_boton_patelar_wrap"><label>Tamaño del botón</label><input id="atr_boton_patelar_talla"></div>
+      </div>
+
+      <div class="subsec">Componentes de revisión en primaria compleja</div>
+      <p class="hint" style="margin-bottom:8px">Solo si esta primaria requirió aumentos, independiente de que la cirugía siga siendo primaria (no revisión completa).</p>
+      <div class="grid3">
+        <div class="field"><label>Cuñas/aumentos</label><select id="atr_cunas" onchange="toggleCond('atr_cunas','atr_cunas_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+        <div class="field conditional" id="atr_cunas_wrap"><label>Ubicación</label><select id="atr_cunas_ubic"><option value="">Seleccionar</option><option>Fémur</option><option>Tibia</option><option>Ambos</option></select></div>
+        <div class="field conditional" id="atr_cunas_wrap2"><label>Tamaño (mm)</label><input type="number" id="atr_cunas_talla"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Conos metafisarios</label><select id="atr_conos" onchange="toggleCond('atr_conos','atr_conos_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+        <div class="field conditional" id="atr_conos_wrap"><label>Ubicación</label><select id="atr_conos_ubic"><option value="">Seleccionar</option><option>Fémur</option><option>Tibia</option><option>Ambos</option></select></div>
+        <div class="field conditional" id="atr_conos_wrap2"><label>Tamaño</label><input id="atr_conos_talla"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Vástagos (stems)</label><select id="atr_vastagos" onchange="toggleCond('atr_vastagos','atr_vastagos_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+        <div class="field conditional" id="atr_vastagos_wrap"><label>Ubicación</label><select id="atr_vastagos_ubic"><option value="">Seleccionar</option><option>Fémur</option><option>Tibia</option><option>Ambos</option></select></div>
+        <div class="field conditional" id="atr_vastagos_wrap2"><label>Tamaño (diámetro/longitud)</label><input id="atr_vastagos_talla"></div>
+      </div>
+
+      <div class="subsec">Técnica quirúrgica</div>
+      <div class="grid2">
+        <div class="field"><label>Abordaje</label><select id="atr_abordaje"><option value="">Seleccionar</option><option>Parapatelar medial</option><option>Subvasto</option><option>Midvastus</option><option>Otro</option></select></div>
+        <div class="field"><label>Alineación</label><select id="atr_alineacion"><option value="">Seleccionar</option><option>Mecánica</option><option>Cinemática</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Asistencia robótica/navegación</label>
+          <select id="atr_robotica" onchange="toggleCond('atr_robotica','atr_robotica_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="atr_robotica_wrap"><label>Tipo</label><select id="atr_robotica_tipo"><option value="">Seleccionar</option><option>MAKO</option><option>ROSA</option><option>CORI</option><option>Velys</option><option>Otro</option></select></div>
+      </div>
+      <div class="field"><label>Tiempo quirúrgico total (minutos)</label><input type="number" id="atr_tiempo_qx" min="0"></div>
+    </div>
+  </div>
+
+  <!-- 4D. OSTEOTOMÍA -->
+  <div class="card module-panel" id="panel-osteotomia">
+    <div class="card-h"><span class="n">4</span>Módulo Osteotomías — alrededor de la rodilla</div>
+    <div class="card-b">
+      <div class="laterality-box"><label>Rodilla operada</label><select id="ost_lateralidad"><option value="">Seleccionar</option><option>Derecha</option><option>Izquierda</option><option>Bilateral</option></select></div>
+
+      <div class="subsec">Mediciones radiográficas preoperatorias</div>
+      <div class="field"><label>Dirección de la deformidad (descriptiva)</label><select id="ost_direccion"><option value="">Seleccionar</option><option>Varo</option><option>Valgo</option></select></div>
+      <div class="grid3">
+        <div class="field"><label>HKA (°) — con signo</label><input type="number" step="0.1" id="ost_hka"><span class="sign-hint">negativo=varo, positivo=valgo</span></div>
+        <div class="field"><label>MAD (mm) — con signo</label><input type="number" step="0.1" id="ost_mad"><span class="sign-hint">negativo=medial, positivo=lateral</span></div>
+        <div class="field"><label>Slope tibial posterior (°)</label><input type="number" step="0.1" id="ost_slope"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>mLDFA (°)</label><input type="number" step="0.1" id="ost_mldfa"></div>
+        <div class="field"><label>MPTA (°)</label><input type="number" step="0.1" id="ost_mpta"></div>
+        <div class="field"><label>JLCA (°)</label><input type="number" step="0.1" id="ost_jlca"></div>
+      </div>
+      <div class="field"><label>JLO (°)</label><input type="number" step="0.1" id="ost_jlo"></div>
+      <div class="grid2">
+        <div class="field"><label>KL compartimento afectado</label><select id="ost_kl_afectado"><option value="">Seleccionar</option><option>I</option><option>II</option><option>III</option><option>IV</option></select></div>
+        <div class="field"><label>KL compartimento NO afectado</label><select id="ost_kl_no_afectado"><option value="">Seleccionar</option><option>I</option><option>II</option><option>III</option><option>IV</option></select></div>
+      </div>
+
+      <div class="subsec">Lesión asociada</div>
+      <div class="grid2">
+        <div class="field"><label>Menisco medial afectado</label><select id="ost_menisco_medial" onchange="toggleCond('ost_menisco_medial','ost_isakos_medial_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+        <div class="field conditional" id="ost_isakos_medial_wrap"><label>Tipo (ISAKOS) — medial</label><select id="ost_isakos_medial"><option value="">Seleccionar</option><option>Radial</option><option>Longitudinal</option><option>Asa de balde</option><option>Lesión en rampa (unión meniscocapsular)</option><option>Raíz meniscal</option><option>Compleja</option><option>Otra</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Menisco lateral afectado</label><select id="ost_menisco_lateral" onchange="toggleCond('ost_menisco_lateral','ost_isakos_lateral_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+        <div class="field conditional" id="ost_isakos_lateral_wrap"><label>Tipo (ISAKOS) — lateral</label><select id="ost_isakos_lateral"><option value="">Seleccionar</option><option>Radial</option><option>Longitudinal</option><option>Asa de balde</option><option>Raíz meniscal</option><option>Compleja</option><option>Otra</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Lesión condral</label>
+          <select id="ost_condral" onchange="toggleCond('ost_condral','ost_condral_ubic_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="ost_condral_ubic_wrap"><label>Ubicación</label><select id="ost_condral_ubicacion"><option value="">Seleccionar</option><option>Cóndilo femoral medial</option><option>Cóndilo femoral lateral</option><option>Tróclea</option><option>Platillo tibial medial</option><option>Platillo tibial lateral</option><option>Rótula</option></select></div>
+      </div>
+
+      <div class="subsec">Técnica quirúrgica</div>
+      <div class="field">
+        <label>Número de niveles</label>
+        <select id="ost_niveles" onchange="toggleOsteotomiaNiveles()"><option value="unico">Único</option><option value="doble">Doble (DLO)</option></select>
+      </div>
+      <div class="grid2 conditional show" id="ost_unico_wrap">
+        <div class="field"><label>Hueso corregido</label><select id="ost_hueso"><option value="">Seleccionar</option><option>Tibia (HTO)</option><option>Fémur (DFO)</option></select></div>
+        <div class="field"><label>Técnica</label><select id="ost_tecnica_unica"><option value="">Seleccionar</option><option>Apertura</option><option>Cierre</option></select></div>
+      </div>
+      <div class="field conditional" id="ost_doble_wrap">
+        <label>Combinación específica (DLO)</label>
+        <select id="ost_combinacion_dlo">
+          <option value="">Seleccionar</option>
+          <option>Varo — DFO cierre lateral + HTO apertura medial</option>
+          <option>Valgo — DFO cierre medial + HTO apertura lateral</option>
+          <option>Valgo — Doble cierre (DFO cierre medial + HTO cierre lateral)</option>
+          <option>Valgo — DFO apertura lateral + HTO cierre medial</option>
+          <option>Otra</option>
+        </select>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Biplanar</label><select id="ost_biplanar"><option value="Sí">Sí</option><option value="No">No</option></select></div>
+        <div class="field"><label>Corrección planeada (°)</label><input type="number" step="0.1" id="ost_correccion_grados"></div>
+        <div class="field"><label>Corrección planeada (mm de cuña)</label><input type="number" step="0.1" id="ost_correccion_mm"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Tipo de placa</label><select id="ost_placa"><option value="">Seleccionar</option><option>Convencional</option><option>Anatómica bloqueada</option></select></div>
+        <div class="field"><label>Marca (trazabilidad)</label><input id="ost_placa_marca"></div>
+      </div>
+      <div class="field"><label>Nota de modificación técnica (opcional)</label><input id="ost_placa_nota" placeholder="Ej: placa de cierre medial contralateral usada en cierre lateral femoral"></div>
+      <div class="field">
+        <label>Gesto asociado</label>
+        <div class="check-grid">
+          <label class="chk"><input type="checkbox" name="ost_gesto" value="Sutura meniscal medial">Sutura meniscal medial</label>
+          <label class="chk"><input type="checkbox" name="ost_gesto" value="Sutura meniscal lateral">Sutura meniscal lateral</label>
+          <label class="chk"><input type="checkbox" name="ost_gesto" value="Meniscectomía medial">Meniscectomía medial</label>
+          <label class="chk"><input type="checkbox" name="ost_gesto" value="Meniscectomía lateral">Meniscectomía lateral</label>
+          <label class="chk"><input type="checkbox" name="ost_gesto" value="Condroplastia">Condroplastia</label>
+          <label class="chk"><input type="checkbox" name="ost_gesto" value="Microfractura">Microfractura</label>
+          <label class="chk"><input type="checkbox" name="ost_gesto" value="LCA/LCP simultáneo">LCA/LCP simultáneo</label>
+          <label class="chk"><input type="checkbox" name="ost_gesto" value="Retiro de material previo">Retiro de material previo</label>
+          <label class="chk"><input type="checkbox" name="ost_gesto" value="Ninguno">Ninguno</label>
+        </div>
+      </div>
+      <div class="field"><label>Tiempo quirúrgico total (minutos)</label><input type="number" id="ost_tiempo_qx" min="0"></div>
+
+      <div class="subsec">Complicación intraoperatoria — fractura de bisagra</div>
+      <div class="grid2">
+        <div class="field">
+          <label>¿Hubo fractura de bisagra?</label>
+          <select id="ost_bisagra" onchange="toggleCond('ost_bisagra','ost_bisagra_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="ost_bisagra_wrap">
+          <label>Clasificación de Takeuchi</label>
+          <select id="ost_bisagra_takeuchi">
+            <option value="">Seleccionar</option>
+            <option>Tipo I — llega a articulación tibioperonea proximal (estable)</option>
+            <option>Tipo II — se extiende distal a la articulación tibioperonea (inestable)</option>
+            <option>Tipo III — se extiende al platillo tibial lateral (más severa)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4E. MULTILIGAMENTARIA -->
+  <div class="card module-panel" id="panel-multiligamentaria">
+    <div class="card-h"><span class="n">4</span>Módulo Multiligamentaria</div>
+    <div class="card-b">
+      <div class="laterality-box"><label>Rodilla operada</label><select id="ml_lateralidad"><option value="">Seleccionar</option><option>Derecha</option><option>Izquierda</option><option>Bilateral</option></select></div>
+
+      <div class="subsec">Preoperatorio</div>
+      <div class="grid2">
+        <div class="field"><label>Nivel de energía del trauma</label><select id="ml_energia"><option value="">Seleccionar</option><option>Alta energía</option><option>Baja energía</option><option>Ultra-baja energía</option></select></div>
+        <div class="field"><label>Luxación de rodilla franca</label><select id="ml_luxacion" onchange="toggleMlClasificacion()"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Lesión vascular</label>
+          <select id="ml_vascular" onchange="toggleCond('ml_vascular','ml_vascular_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="ml_vascular_wrap">
+          <label>Arteria + manejo</label>
+          <select id="ml_vascular_arteria"><option value="">Arteria</option><option>Poplítea</option><option>Otra</option></select>
+          <select id="ml_vascular_manejo" style="margin-top:6px"><option value="">Manejo</option><option>Observación</option><option>Reparación primaria</option><option>Injerto</option><option>Fasciotomía</option></select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Lesión neurológica</label>
+          <select id="ml_neuro" onchange="toggleCond('ml_neuro','ml_neuro_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="ml_neuro_wrap">
+          <label>Nervio + severidad</label>
+          <select id="ml_neuro_nervio"><option value="">Nervio</option><option>Peroneo común</option><option>Tibial</option><option>Otro</option></select>
+          <select id="ml_neuro_severidad" style="margin-top:6px"><option value="">Severidad</option><option>Neuropraxia</option><option>Axonotmesis</option><option>Neurotmesis</option></select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Fracturas asociadas</label>
+          <select id="ml_fractura" onchange="toggleCond('ml_fractura','ml_fractura_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="ml_fractura_wrap"><label>Tipo/ubicación</label><input id="ml_fractura_detalle"></div>
+      </div>
+      <div class="field conditional" id="ml_schenck_wrap"><label>Clasificación de Schenck (luxación franca)</label>
+        <select id="ml_schenck"><option value="">Seleccionar</option><option>KD I</option><option>KD II</option><option>KD IIIM</option><option>KD IIIL</option><option>KD IV</option><option>KD V</option></select>
+      </div>
+      <div class="field conditional show" id="ml_mlki_wrap">
+        <label>Clasificación MLKI (sin luxación franca)</label>
+        <div id="ml_mlki_valor" style="border:0.5px solid var(--border2);border-radius:7px;padding:7px 10px;font-size:12.5px;font-weight:700;color:var(--navy);background:var(--bg2)">— marca las estructuras afectadas abajo —</div>
+      </div>
+      <div class="field">
+        <label>Estructuras ligamentarias afectadas</label>
+        <div class="check-grid">
+          <label class="chk"><input type="checkbox" name="ml_estructuras" value="LCA" onchange="updateMlki()">LCA</label>
+          <label class="chk"><input type="checkbox" name="ml_estructuras" value="LCP" onchange="updateMlki()">LCP</label>
+          <label class="chk"><input type="checkbox" name="ml_estructuras" value="PLC" onchange="updateMlki()">Esquina posterolateral (PLC)</label>
+          <label class="chk"><input type="checkbox" name="ml_estructuras" value="PMC" onchange="updateMlki()">Esquina posteromedial (PMC)</label>
+        </div>
+      </div>
+      <p class="hint">Con luxación franca (definición: separación completa de las superficies articulares) se usa <strong>Schenck</strong>, el sistema clásico y más establecido — se prioriza cuando aplica. Sin luxación franca, el consenso de expertos 2024 (BJSM, DOI 10.1136/bjsports-2024-108089) señala que Schenck asume dislocación y recomienda no forzarlo ahí — se usa en su lugar la nomenclatura <strong>MLKI</strong> (Poploski et al. 2023), calculada automáticamente aquí a partir de las estructuras marcadas abajo (nomenclatura más reciente y aún menos estandarizada que Schenck).</p>
+
+      <div class="subsec">Lesión asociada</div>
+      <div class="grid2">
+        <div class="field"><label>Menisco medial afectado</label><select id="ml_menisco_medial" onchange="toggleCond('ml_menisco_medial','ml_isakos_medial_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+        <div class="field conditional" id="ml_isakos_medial_wrap"><label>Tipo (ISAKOS) — medial</label><select id="ml_isakos_medial"><option value="">Seleccionar</option><option>Radial</option><option>Longitudinal</option><option>Asa de balde</option><option>Lesión en rampa (unión meniscocapsular)</option><option>Raíz meniscal</option><option>Compleja</option><option>Otra</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Menisco lateral afectado</label><select id="ml_menisco_lateral" onchange="toggleCond('ml_menisco_lateral','ml_isakos_lateral_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+        <div class="field conditional" id="ml_isakos_lateral_wrap"><label>Tipo (ISAKOS) — lateral</label><select id="ml_isakos_lateral"><option value="">Seleccionar</option><option>Radial</option><option>Longitudinal</option><option>Asa de balde</option><option>Raíz meniscal</option><option>Compleja</option><option>Otra</option></select></div>
+      </div>
+      <div class="field"><label>Lesión condral</label><select id="ml_condral"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+
+      <div class="subsec">Técnica por estructura (llenar solo si aplica según lo marcado arriba)</div>
+      <p class="hint" style="margin-bottom:8px">LCA</p>
+      <div class="grid2">
+        <div class="field"><label>Injerto LCA</label><select id="ml_lca_injerto"><option value="">Seleccionar</option><option>HTH</option><option>Isquiotibiales</option><option>Peroneo largo</option><option>Cuádriceps</option><option>Recto femoral</option><option>Aloinjerto</option></select></div>
+        <div class="field"><label>Fijación LCA</label><select id="ml_lca_fijacion"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Suspensión</option></select></div>
+      </div>
+      <p class="hint" style="margin-bottom:8px">LCP</p>
+      <div class="grid2">
+        <div class="field"><label>Haz</label><select id="ml_lcp_haz"><option value="">Seleccionar</option><option>Doble haz</option><option>Haz único</option></select></div>
+        <div class="field"><label>Técnica</label><select id="ml_lcp_tecnica"><option value="">Seleccionar</option><option>Transtibial</option><option>Inlay</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Injerto LCP</label><select id="ml_lcp_injerto"><option value="">Seleccionar</option><option>HTH</option><option>Isquiotibiales</option><option>Peroneo largo</option><option>Cuádriceps</option><option>Aloinjerto</option></select></div>
+        <div class="field"><label>Fijación primaria</label><select id="ml_lcp_fijacion"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Suspensión</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>¿Segunda fijación (backup)?</label>
+          <select id="ml_lcp_2fijacion" onchange="toggleCond('ml_lcp_2fijacion','ml_lcp_2fijacion_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="ml_lcp_2fijacion_wrap"><label>Tipo</label><select id="ml_lcp_2fijacion_tipo"><option value="">Seleccionar</option><option>Knotless</option><option>Tornillo con arandela</option><option>Botón</option><option>Otra</option></select></div>
+      </div>
+      <p class="hint" style="margin-bottom:8px">Esquina posterolateral (PLC)</p>
+      <div class="grid2">
+        <div class="field"><label>Técnica PLC</label><select id="ml_plc_tecnica"><option value="">Seleccionar</option><option>Arciero</option><option>LaPrade</option><option>Yoon</option><option>Otra</option></select></div>
+        <div class="field"><label>Injerto + fijación PLC</label><input id="ml_plc_injerto" placeholder="Injerto / fijación"></div>
+      </div>
+      <p class="hint" style="margin-bottom:8px">Esquina posteromedial (PMC)</p>
+      <div class="grid2">
+        <div class="field"><label>Tipo de procedimiento</label><select id="ml_pmc_tipo"><option value="">Seleccionar</option><option>Reparación/plicatura directa</option><option>Reconstrucción con injerto</option></select></div>
+        <div class="field"><label>Técnica (si reconstrucción)</label><select id="ml_pmc_tecnica"><option value="">Seleccionar</option><option>LaPrade-Wijdicks</option><option>Kim</option><option>Canuto</option><option>Otra</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>¿Reconstrucción aislada de MCL (sin POL)?</label><select id="ml_pmc_aislada"><option value="">Seleccionar</option><option>Sí</option><option>No</option></select></div>
+        <div class="field"><label>Injerto + fijación PMC</label><input id="ml_pmc_injerto" placeholder="Injerto / fijación"></div>
+      </div>
+
+      <div class="subsec">Otros datos operatorios</div>
+      <div class="grid2">
+        <div class="field"><label>SSD radiográfico preop (mm) — opcional</label><input type="number" step="0.1" id="ml_ssd_pre"></div>
+        <div class="field"><label>SSD radiográfico postop (mm) — opcional</label><input type="number" step="0.1" id="ml_ssd_post"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Inmovilización — tipo</label><select id="ml_inmovilizacion"><option value="">Seleccionar</option><option>Férula</option><option>Yeso</option><option>Órtesis articulada</option></select></div>
+        <div class="field"><label>Tiempo de uso (semanas)</label><input type="number" id="ml_inmovilizacion_tiempo"></div>
+      </div>
+      <div class="field"><label>Tiempo quirúrgico total (minutos)</label><input type="number" id="ml_tiempo_qx" min="0"></div>
+    </div>
+  </div>
+
+  <!-- 4F. PATELOFEMORAL -->
+  <div class="card module-panel" id="panel-patelofemoral">
+    <div class="card-h"><span class="n">4</span>Módulo Patelofemoral — inestabilidad</div>
+    <div class="card-b">
+      <div class="laterality-box"><label>Rodilla operada</label><select id="pf_lateralidad"><option value="">Seleccionar</option><option>Derecha</option><option>Izquierda</option><option>Bilateral</option></select></div>
+
+      <div class="subsec">Preoperatorio</div>
+      <div class="field"><label>Número de episodios de luxación</label><select id="pf_episodios"><option value="">Seleccionar</option><option>Primera luxación</option><option>Recidivante</option></select></div>
+      <div class="grid2">
+        <div class="field"><label>Dejour clásica (radiográfica)</label><select id="pf_dejour_clasica"><option value="">Seleccionar</option><option>Tipo A</option><option>Tipo B</option><option>Tipo C</option><option>Tipo D</option></select></div>
+        <div class="field"><label>Dejour por RM (cuantitativa, v3.0)</label><select id="pf_dejour_rm"><option value="">Seleccionar</option><option value="0">Tipo 0 — sin displasia</option><option value="1">Tipo 1 — bajo grado</option><option value="2">Tipo 2 — moderado</option><option value="3">Tipo 3 — alto grado</option></select></div>
+      </div>
+      <p class="hint">Dejour por RM v3.0 (Dejour et al. 2025, KSSTA) — no usa las mismas letras A-D de la clasificación clásica: se basa en ángulo del surco (≥157° anormal), inclinación troclear lateral/LTI (&lt;14° anormal) y altura del bump central (≥5mm = alto grado).</p>
+      <div class="grid3">
+        <div class="field"><label>Altura patelar (Caton-Deschamps)</label><input type="number" step="0.01" id="pf_caton"></div>
+        <div class="field"><label>TT-TG (mm)</label><input type="number" step="0.1" id="pf_tttg"></div>
+        <div class="field"><label>Tilt patelar (°)</label><input type="number" step="0.1" id="pf_tilt"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Signo de J</label><select id="pf_signo_j"><option value="">Seleccionar</option><option>Sí</option><option>No</option></select></div>
+        <div class="field"><label>Beighton (opcional)</label><input type="number" id="pf_beighton" min="0" max="9"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Anteversión femoral preop (°) — opcional</label><input type="number" step="0.1" id="pf_anteversion"></div>
+        <div class="field"><label>Torsión tibial preop (°) — opcional</label><input type="number" step="0.1" id="pf_torsion_tibial"></div>
+      </div>
+
+      <div class="subsec">Lesión asociada</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Fractura osteocondral</label>
+          <select id="pf_fx_osteocondral" onchange="toggleCond('pf_fx_osteocondral','pf_fx_osteocondral_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="pf_fx_osteocondral_wrap"><label>Ubicación</label><input id="pf_fx_osteocondral_ubic"></div>
+      </div>
+      <div class="field">
+        <label>Lesión condral/osteocondral patelofemoral</label>
+        <select id="pf_condral" onchange="toggleCond('pf_condral','pf_condral_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+      <div class="conditional" id="pf_condral_wrap">
+        <div class="field">
+          <label>Ubicación (marcar todas las afectadas)</label>
+          <div class="check-grid">
+            <label class="chk"><input type="checkbox" name="pf_condral_ubicacion" value="Rótula">Rótula</label>
+            <label class="chk"><input type="checkbox" name="pf_condral_ubicacion" value="Cóndilo femoral / tróclea">Cóndilo femoral / tróclea</label>
+          </div>
+        </div>
+        <div class="field"><label>Grado ICRS (lesión más severa)</label><select id="pf_condral_icrs"><option value="">Seleccionar</option><option>0 — Normal</option><option>I — Reblandecimiento/fisuras superficiales</option><option>II — Lesión &lt;50% del espesor</option><option>III — Lesión &gt;50% del espesor (sin hueso subcondral expuesto)</option><option>IV — Hueso subcondral expuesto</option></select></div>
+      </div>
+
+      <div class="subsec">Técnica quirúrgica</div>
+      <div class="field">
+        <label>Reconstrucción del MPFL</label>
+        <select id="pf_mpfl" onchange="toggleCond('pf_mpfl','pf_mpfl_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+      <div class="conditional" id="pf_mpfl_wrap">
+        <div class="grid2">
+          <div class="field"><label>Tipo de injerto</label><select id="pf_mpfl_injerto"><option value="">Seleccionar</option><option>Gracilis</option><option>Semitendinoso</option><option>Hemiperoneo</option><option>Aloinjerto</option><option>Tira de tendón cuadricipital</option></select></div>
+          <div class="field"><label>Fijación patelar</label><select id="pf_mpfl_fij_patelar"><option value="">Seleccionar</option><option>Túnel</option><option>Anclaje de sutura</option></select></div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Fijación femoral</label>
+            <select id="pf_mpfl_fij_femoral" onchange="toggleCond('pf_mpfl_fij_femoral','pf_mpfl_fij_femoral_wrap','Sí')"><option value="No">No — paso por tendón aductor</option><option value="Sí">Sí</option></select>
+          </div>
+          <div class="field conditional" id="pf_mpfl_fij_femoral_wrap"><label>Con qué se fija</label><input id="pf_mpfl_fij_femoral_tipo"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Osteotomía de tuberosidad tibial (TTO)</label>
+        <select id="pf_tto" onchange="toggleCond('pf_tto','pf_tto_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+      <div class="grid2 conditional" id="pf_tto_wrap">
+        <div class="field"><label>Tipo</label><select id="pf_tto_tipo"><option value="">Seleccionar</option><option>Medialización (Elmslie-Trillat)</option><option>Distalización</option><option>Anteromedialización (Fulkerson)</option><option>Combinada</option></select></div>
+        <div class="field"><label>Corrección (mm)</label><input type="number" step="0.1" id="pf_tto_mm"></div>
+      </div>
+
+      <div class="field">
+        <label>Trocleoplastia</label>
+        <select id="pf_trocleoplastia" onchange="toggleCond('pf_trocleoplastia','pf_trocleoplastia_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+      <div class="field conditional" id="pf_trocleoplastia_wrap"><label>Tipo</label><select id="pf_trocleoplastia_tipo"><option value="">Seleccionar</option><option>Dejour/deepening</option><option>Bereiter</option><option>Otra</option></select></div>
+
+      <div class="field">
+        <label>Osteotomía desrotatoria</label>
+        <select id="pf_derot" onchange="togglePfDerot()"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+      <div class="conditional" id="pf_derot_wrap">
+        <div class="field"><label>¿Dónde?</label><select id="pf_derot_sitio" onchange="togglePfDerot()"><option value="">Seleccionar</option><option>Femoral</option><option>Tibial</option><option>Ambas</option></select></div>
+        <div class="grid2">
+          <div class="field conditional" id="pf_derot_femoral_wrap"><label>Corrección femoral (°)</label><input type="number" step="0.1" id="pf_derot_femoral_grados"></div>
+          <div class="field conditional" id="pf_derot_tibial_wrap"><label>Corrección tibial (°)</label><input type="number" step="0.1" id="pf_derot_tibial_grados"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Gesto en el retináculo lateral</label>
+        <select id="pf_retinaculo" onchange="toggleCond('pf_retinaculo','pf_retinaculo_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+      <div class="field conditional" id="pf_retinaculo_wrap"><label>Tipo</label><select id="pf_retinaculo_tipo"><option value="">Seleccionar</option><option>Alargamiento</option><option>Liberación</option></select></div>
+
+      <div class="field">
+        <label>Gesto asociado</label>
+        <div class="check-grid">
+          <label class="chk"><input type="checkbox" name="pf_gesto" value="Fijación de fragmento osteocondral">Fijación de fragmento osteocondral</label>
+          <label class="chk"><input type="checkbox" name="pf_gesto" value="Condroplastia">Condroplastia</label>
+          <label class="chk"><input type="checkbox" name="pf_gesto" value="Otro">Otro</label>
+        </div>
+      </div>
+      <div class="field"><label>Tiempo quirúrgico total (minutos)</label><input type="number" id="pf_tiempo_qx" min="0"></div>
+    </div>
+  </div>
+
+  <!-- 4G. MECANISMO EXTENSOR -->
+  <div class="card module-panel" id="panel-mecext">
+    <div class="card-h"><span class="n">4</span>Módulo Mecanismo extensor — tendón rotuliano/cuadricipital</div>
+    <div class="card-b">
+      <div class="grid2">
+        <div class="laterality-box" style="margin:0"><label>Rodilla operada</label><select id="mx_lateralidad"><option value="">Seleccionar</option><option>Derecha</option><option>Izquierda</option><option>Bilateral</option></select></div>
+        <div class="field"><label>Estructura afectada</label><select id="mx_estructura" onchange="toggleMxEstructura()"><option value="">Seleccionar</option><option>Tendón rotuliano</option><option>Tendón cuadricipital</option></select></div>
+      </div>
+
+      <div class="subsec">Preoperatorio</div>
+      <div class="grid2">
+        <div class="field"><label>Cronicidad</label><select id="mx_cronicidad"><option value="">Seleccionar</option><option>Agudo (&lt;3 semanas)</option><option>Crónico (&gt;3 semanas)</option></select></div>
+        <div class="field"><label>Altura patelar preop (Caton-Deschamps)</label><input type="number" step="0.01" id="mx_caton"></div>
+      </div>
+      <p class="hint">Cronicidad con corte a 3 semanas (ventana práctica para reparo primario). La clasificación clásica de Siwek-Rao corta en 2 semanas; algunas series consideran "reparo diferido" desde las 6 semanas.</p>
+      <div class="field conditional" id="mx_localiz_rotuliano_wrap">
+        <label>Localización de la ruptura (rotuliano)</label>
+        <select id="mx_localiz_rotuliano"><option value="">Seleccionar</option><option>Polo inferior de rótula (avulsión proximal)</option><option>Cuerpo del tendón (rotura media)</option><option>Tuberosidad tibial (avulsión distal)</option></select>
+      </div>
+      <div class="field conditional" id="mx_localiz_cuadricipital_wrap">
+        <label>Localización de la ruptura (cuadricipital)</label>
+        <select id="mx_localiz_cuadricipital"><option value="">Seleccionar</option><option>Polo superior de rótula (inserción)</option><option>Unión musculotendinosa</option><option>Cuerpo del tendón</option></select>
+      </div>
+
+      <div class="subsec">Técnica quirúrgica</div>
+      <div class="field">
+        <label>Técnica</label>
+        <select id="mx_tecnica" onchange="toggleMxTecnica()"><option value="">Seleccionar</option><option>Reparo primario</option><option>Reparo + aumentación</option><option>Reconstrucción</option></select>
+      </div>
+      <div class="field conditional" id="mx_injerto_wrap">
+        <label>Tipo de injerto</label>
+        <select id="mx_injerto"><option value="">Seleccionar</option><option>HTH</option><option>Isquiotibiales</option><option>Peroneo largo</option><option>Cuádriceps</option><option>Recto femoral</option><option>Aloinjerto</option><option>Sintético (cinta de sutura/malla)</option><option>Otro</option></select>
+      </div>
+      <div class="field">
+        <label>Técnica de fijación</label>
+        <select id="mx_fijacion" onchange="toggleMxFijacion()"><option value="">Seleccionar</option><option>Túneles óseos</option><option>Suturas de anclaje</option><option>Híbrida (túneles + anclajes)</option></select>
+      </div>
+      <div class="grid2">
+        <div class="field conditional" id="mx_tuneles_wrap"><label>Número de túneles</label><input type="number" id="mx_num_tuneles" min="0"></div>
+        <div class="field conditional" id="mx_anclajes_wrap"><label>Número de anclajes</label><input type="number" id="mx_num_anclajes" min="0"></div>
+      </div>
+      <div class="field"><label>Tiempo quirúrgico total (minutos)</label><input type="number" id="mx_tiempo_qx" min="0"></div>
+    </div>
+  </div>
+
+  <!-- 5. VISITA DE SEGUIMIENTO -->
+  <div class="card">
+    <div class="card-h"><span class="n">5</span>Visita de seguimiento</div>
+    <div class="card-b">
+      <p class="hint" style="margin-bottom:10px">Cada visita se guarda como una fila aparte (formato largo), ligada al código de estudio de arriba.</p>
+      <div class="visit-tabs">
+        <button type="button" class="visit-tab active" onclick="setVisit('Basal',this)">Basal (preop)</button>
+        <button type="button" class="visit-tab" data-special-visit onclick="setVisit('Control 3-6 meses',this)">Control 3-6 meses</button>
+        <button type="button" class="visit-tab" onclick="setVisit('6 meses',this)">6 meses</button>
+        <button type="button" class="visit-tab" onclick="setVisit('12 meses',this)">12 meses</button>
+        <button type="button" class="visit-tab" onclick="setVisit('24 meses',this)">24 meses</button>
+      </div>
+      <div class="field" style="max-width:220px">
+        <label>Fecha de esta visita</label>
+        <input type="date" id="fecha_visita">
+      </div>
+      <p class="hint" style="margin-bottom:10px">Se sugiere sola al cambiar de pestaña (Basal = fecha de registro; los demás controles = fecha de registro + 3-6/6/12/24 meses) — ajústala si el control se hizo en otra fecha.</p>
+      <p class="hint" id="basal-hint" style="margin-bottom:10px">En la visita Basal solo se registran escalas preoperatorias — las complicaciones aplican a partir del primer control postoperatorio (las intraoperatorias ya quedaron en la técnica quirúrgica, arriba).</p>
+
+      <!-- Bloque específico de Osteotomías: consolidación + HKA postop — se toma UNA sola vez, no se repite en 6/12/24m -->
+      <div class="conditional" id="osteo_seguimiento_wrap">
+        <div class="subsec" style="margin-top:0">Consolidación y corrección — Control 3-6 meses (una sola vez)</div>
+        <p class="hint" style="margin-bottom:8px">La panorámica de eje mecánico se toma una única vez tras confirmar consolidación — el HKA no cambia espontáneamente después, salvo pérdida de corrección (que se registra como complicación en 6/12/24m).</p>
+        <div class="grid2">
+          <div class="field"><label>Estado radiográfico de consolidación</label><select id="ost_consolidacion"><option value="">Seleccionar</option><option>Consolidado</option><option>En consolidación</option><option>Retardo</option><option>No unión</option></select></div>
+          <div class="field"><label>HKA postoperatorio (°) — con signo</label><input type="number" step="0.1" id="ost_hka_post"><span class="sign-hint">negativo=varo, positivo=valgo</span></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>mLDFA postop (°)</label><input type="number" step="0.1" id="ost_mldfa_post"></div>
+          <div class="field"><label>MPTA postop (°)</label><input type="number" step="0.1" id="ost_mpta_post"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>JLCA postop (°)</label><input type="number" step="0.1" id="ost_jlca_post"></div>
+          <div class="field"><label>JLO postop (°)</label><input type="number" step="0.1" id="ost_jlo_post"></div>
+        </div>
+        <div class="field"><label>%WBL postoperatorio — opcional</label><input type="number" step="0.1" id="ost_wbl_post"></div>
+      </div>
+
+      <!-- Bloque específico de Mecanismo extensor: altura patelar postop — se toma UNA sola vez, no se repite en 6/12/24m -->
+      <div class="conditional" id="mx_seguimiento_wrap">
+        <div class="subsec" style="margin-top:0">Altura patelar — Control 3-6 meses (una sola vez)</div>
+        <p class="hint" style="margin-bottom:8px">Se compara contra la altura patelar preoperatoria (módulo Mecanismo extensor) para confirmar restauración correcta — no se repite en 6/12/24m salvo sospecha de patela baja/alta iatrogénica (que ya se registra como complicación).</p>
+        <div class="field"><label>Altura patelar postop (Caton-Deschamps)</label><input type="number" step="0.01" id="mx_caton_post"></div>
+      </div>
+
+      <div id="complicaciones-wrap">
+        <div class="subsec">Complicaciones (esta visita)</div>
+        <div class="check-grid compl-group" id="complicaciones-lca" style="display:flex">
+          <label class="chk"><input type="checkbox" name="compl" value="Rerruptura">Rerruptura</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Artrofibrosis">Artrofibrosis</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Dolor sitio donante">Dolor sitio donante</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Infección">Infección</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Laxitud residual">Laxitud residual</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Dolor anterior de rodilla">Dolor anterior de rodilla</label>
+          <label class="chk"><input type="checkbox" name="compl" value="TVP/TEP">TVP / TEP</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Lesión neurovascular">Lesión neurovascular</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Otra">Otra</label>
+        </div>
+        <div class="check-grid compl-group" id="complicaciones-meniscal" style="display:none">
+          <label class="chk"><input type="checkbox" name="compl" value="Re-rotura / falla de reparación">Re-rotura / falla de reparación</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Artrofibrosis/rigidez">Artrofibrosis / rigidez</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Dolor persistente">Dolor persistente</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Infección">Infección</label>
+          <label class="chk"><input type="checkbox" name="compl" value="TVP/TEP">TVP / TEP</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Lesión neurológica (safeno)">Lesión neurológica (rama infrapatelar del safeno)</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Otra">Otra</label>
+        </div>
+        <div class="check-grid compl-group" id="complicaciones-atr" style="display:none">
+          <label class="chk"><input type="checkbox" name="compl" value="Infección periprotésica">Infección periprotésica</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Aflojamiento aséptico">Aflojamiento aséptico</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Rigidez/artrofibrosis">Rigidez/artrofibrosis</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Fractura periprotésica">Fractura periprotésica</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Luxación/inestabilidad">Luxación/inestabilidad</label>
+          <label class="chk"><input type="checkbox" name="compl" value="TVP/TEP">TVP / TEP</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Lesión de nervio peroneo">Lesión de nervio peroneo</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Dolor anterior persistente">Dolor anterior persistente</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Otra">Otra</label>
+        </div>
+        <div class="check-grid compl-group" id="complicaciones-osteotomia" style="display:none">
+          <label class="chk"><input type="checkbox" name="compl" value="Retardo de consolidación/no unión">Retardo de consolidación / no unión</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Pérdida de corrección">Pérdida de corrección</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Infección">Infección</label>
+          <label class="chk"><input type="checkbox" name="compl" value="TVP/TEP">TVP / TEP</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Lesión neurovascular">Lesión neurovascular</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Dolor persistente">Dolor persistente</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Conversión a artroplastia">Conversión a artroplastia</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Otra">Otra</label>
+        </div>
+        <div class="check-grid compl-group" id="complicaciones-multiligamentaria" style="display:none">
+          <label class="chk"><input type="checkbox" name="compl" value="Rerruptura">Rerruptura</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Artrofibrosis/rigidez">Artrofibrosis/rigidez</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Laxitud residual">Laxitud residual</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Dolor anterior de rodilla">Dolor anterior de rodilla</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Infección">Infección</label>
+          <label class="chk"><input type="checkbox" name="compl" value="TVP/TEP">TVP / TEP</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Lesión neurovascular">Lesión neurovascular</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Otra">Otra</label>
+        </div>
+        <div class="check-grid compl-group" id="complicaciones-patelofemoral" style="display:none">
+          <label class="chk"><input type="checkbox" name="compl" value="Reluxación">Reluxación</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Fractura patelar">Fractura patelar</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Rigidez/artrofibrosis">Rigidez/artrofibrosis</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Dolor anterior persistente">Dolor anterior persistente</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Infección">Infección</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Lesión neurovascular">Lesión neurovascular</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Progresión de artrosis patelofemoral">Progresión de artrosis patelofemoral</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Otra">Otra</label>
+        </div>
+        <div class="check-grid compl-group" id="complicaciones-mecext" style="display:none">
+          <label class="chk"><input type="checkbox" name="compl" value="Re-ruptura">Re-ruptura</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Artrofibrosis/rigidez">Artrofibrosis/rigidez</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Extensor lag persistente">Extensor lag persistente</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Patela baja/alta iatrogénica">Patela baja/alta iatrogénica</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Infección">Infección</label>
+          <label class="chk"><input type="checkbox" name="compl" value="TVP/TEP">TVP / TEP</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Dolor anterior persistente">Dolor anterior persistente</label>
+          <label class="chk"><input type="checkbox" name="compl" value="Otra">Otra</label>
+        </div>
+      </div>
+
+      <div class="subsec">Escalas funcionales</div>
+
+      <!-- LYSHOLM + TEGNER -->
+      <div class="scale-box" data-scale="lysholm" id="scalebox-lysholm">
+        <div class="scale-box-top">
+          <span class="scale-name">Lysholm + Tegner <span class="scale-opt-badge" id="badge-lysholm">Obligatorio</span></span>
+          <button type="button" class="expand-btn" onclick="toggleQ('q-lysholm')">Desplegar cuestionario</button>
+        </div>
+        <div class="scale-inputs">
+          <div class="field" style="margin:0"><label>Puntaje Lysholm total</label><input type="number" id="lysholm_total" min="0" max="100"></div>
+          <div class="field" style="margin:0"><label>Tegner actual</label><select id="tegner_actual">
+            <option value="">— seleccionar —</option>
+            <option value="10">10 — Fútbol competitivo (nivel nacional/internacional)</option>
+            <option value="9">9 — Fútbol competitivo (divisiones inferiores)</option>
+            <option value="8">8 — Deportes de contacto / fútbol sala competitivo</option>
+            <option value="7">7 — Fútbol recreativo / squash / atletismo recreativo</option>
+            <option value="6">6 — Deportes recreativos (tenis, badminton, esquí)</option>
+            <option value="5">5 — Trabajo físico moderado / ciclismo</option>
+            <option value="4">4 — Trabajo físico moderado / marcha rápida</option>
+            <option value="3">3 — Trabajo ligero / trabajo de pie</option>
+            <option value="2">2 — Trabajo sedentario / terreno irregular</option>
+            <option value="1">1 — Trabajo sedentario / terreno plano</option>
+            <option value="0">0 — Incapacidad / pensión por rodilla</option>
+          </select></div>
+          <div class="field" style="margin:0"><label>Tegner previo a lesión</label><select id="tegner_previo">
+            <option value="">— seleccionar —</option>
+            <option value="10">10 — Fútbol competitivo (nivel nacional/internacional)</option>
+            <option value="9">9 — Fútbol competitivo (divisiones inferiores)</option>
+            <option value="8">8 — Deportes de contacto / fútbol sala competitivo</option>
+            <option value="7">7 — Fútbol recreativo / squash / atletismo recreativo</option>
+            <option value="6">6 — Deportes recreativos (tenis, badminton, esquí)</option>
+            <option value="5">5 — Trabajo físico moderado / ciclismo</option>
+            <option value="4">4 — Trabajo físico moderado / marcha rápida</option>
+            <option value="3">3 — Trabajo ligero / trabajo de pie</option>
+            <option value="2">2 — Trabajo sedentario / terreno irregular</option>
+            <option value="1">1 — Trabajo sedentario / terreno plano</option>
+            <option value="0">0 — Incapacidad / pensión por rodilla</option>
+          </select></div>
+        </div>
+        <div class="questionnaire" id="q-lysholm"></div>
+      </div>
+
+      <!-- IKDC -->
+      <div class="scale-box" data-scale="ikdc" id="scalebox-ikdc">
+        <div class="scale-box-top">
+          <span class="scale-name">IKDC Subjetiva <span class="scale-opt-badge" id="badge-ikdc">Opcional</span></span>
+          <button type="button" class="expand-btn" onclick="toggleQ('q-ikdc')">Desplegar cuestionario</button>
+        </div>
+        <label class="opt-toggle"><input type="checkbox" id="ikdc_incluir" onchange="document.getElementById('ikdc_total').disabled=!this.checked">Incluir IKDC en esta visita</label>
+        <div class="scale-inputs">
+          <div class="field" style="margin:0"><label>Puntaje IKDC total (0-100)</label><input type="number" id="ikdc_total" step="0.1" min="0" max="100" disabled></div>
+        </div>
+        <p class="hint">Traducción/adaptación al español validada (Pujol et al. 2025, Cir Cir). Validación psicométrica poblacional en Colombia: en curso.</p>
+        <div class="questionnaire" id="q-ikdc"></div>
+      </div>
+
+      <!-- ACL-QOL -->
+      <div class="scale-box" data-scale="aclqol" id="scalebox-aclqol">
+        <div class="scale-box-top">
+          <span class="scale-name">ACL-QOL (calidad de vida) <span class="scale-opt-badge" id="badge-aclqol">Opcional</span></span>
+          <button type="button" class="expand-btn" onclick="toggleQ('q-aclqol')">Desplegar cuestionario</button>
+        </div>
+        <label class="opt-toggle"><input type="checkbox" id="aclqol_incluir" onchange="document.querySelectorAll('.aclqol-field').forEach(f=>f.disabled=!this.checked)">Incluir ACL-QOL en esta visita</label>
+        <div class="scale-inputs">
+          <div class="field" style="margin:0"><label>Síntomas y molestias físicas (0-100)</label><input class="aclqol-field" type="number" id="aclqol_sintomas" step="0.1" min="0" max="100" disabled></div>
+          <div class="field" style="margin:0"><label>Problemas en el trabajo (0-100)</label><input class="aclqol-field" type="number" id="aclqol_trabajo" step="0.1" min="0" max="100" disabled></div>
+          <div class="field" style="margin:0"><label>Deporte/ocio/competición (0-100)</label><input class="aclqol-field" type="number" id="aclqol_deporte" step="0.1" min="0" max="100" disabled></div>
+          <div class="field" style="margin:0"><label>Estilo de vida (0-100)</label><input class="aclqol-field" type="number" id="aclqol_estilo" step="0.1" min="0" max="100" disabled></div>
+          <div class="field" style="margin:0"><label>Ámbito social y emocional (0-100)</label><input class="aclqol-field" type="number" id="aclqol_social" step="0.1" min="0" max="100" disabled></div>
+          <div class="field" style="margin:0"><label>Puntaje ACL-QOL total (0-100)</label><input class="aclqol-field" type="number" id="aclqol_total" step="0.1" min="0" max="100" disabled></div>
+        </div>
+        <p class="hint">Validación psicométrica completa al español (Donat-Roca et al. 2023, OJSM) — consistencia interna α 0.94-0.98, sin techo/piso, sin correlación con Tegner (mide calidad de vida, no nivel de actividad).</p>
+        <div class="questionnaire" id="q-aclqol"></div>
+      </div>
+
+      <!-- OXFORD -->
+      <div class="scale-box" data-scale="oxford" id="scalebox-oxford">
+        <div class="scale-box-top">
+          <span class="scale-name">Oxford Knee Score <span class="scale-opt-badge" id="badge-oxford">Obligatorio</span></span>
+          <button type="button" class="expand-btn" onclick="toggleQ('q-oxford')">Desplegar cuestionario</button>
+        </div>
+        <div class="scale-inputs">
+          <div class="field" style="margin:0"><label>Puntaje Oxford total (0-48)</label><input type="number" id="oxford_total" min="0" max="48"></div>
+        </div>
+        <div class="questionnaire" id="q-oxford"></div>
+      </div>
+
+      <!-- KOOS -->
+      <div class="scale-box" data-scale="koos" id="scalebox-koos">
+        <div class="scale-box-top">
+          <span class="scale-name">KOOS <span class="scale-opt-badge" id="badge-koos">Opcional</span></span>
+          <button type="button" class="expand-btn" onclick="toggleQ('q-koos')">Desplegar cuestionario</button>
+        </div>
+        <div class="scale-inputs">
+          <div class="field" style="margin:0"><label>Dolor</label><input type="number" id="koos_dolor" min="0" max="100"></div>
+          <div class="field" style="margin:0"><label>Síntomas</label><input type="number" id="koos_sintomas" min="0" max="100"></div>
+          <div class="field" style="margin:0"><label>AVD</label><input type="number" id="koos_avd" min="0" max="100"></div>
+          <div class="field" style="margin:0"><label>Deporte</label><input type="number" id="koos_deporte" min="0" max="100"></div>
+          <div class="field" style="margin:0"><label>Calidad de vida</label><input type="number" id="koos_qol" min="0" max="100"></div>
+        </div>
+        <p class="hint">Ref: Vaquero J, et al. KSSTA. 2014;22(1):104-108. Cada subescala: 100 − (suma de puntos / puntos máx.) × 100 — mayor puntaje = mejor función.</p>
+        <div class="questionnaire" id="q-koos"></div>
+      </div>
+
+      <!-- KSS -->
+      <div class="scale-box" data-scale="kss" id="scalebox-kss">
+        <div class="scale-box-top">
+          <span class="scale-name">Knee Society Score (KSS 2011) <span class="scale-opt-badge" id="badge-kss">Opcional</span></span>
+        </div>
+        <div class="scale-inputs">
+          <div class="field" style="margin:0"><label>Objetiva (0-100)</label><input type="number" id="kss_objetiva" min="0" max="100"></div>
+          <div class="field" style="margin:0"><label>Satisfacción (0-40)</label><input type="number" id="kss_satisfaccion" min="0" max="40"></div>
+          <div class="field" style="margin:0"><label>Expectativas (3-15)</label><input type="number" id="kss_expectativas" min="3" max="15"></div>
+          <div class="field" style="margin:0"><label>Funcional</label><input type="number" id="kss_funcional"></div>
+        </div>
+        <p class="hint">Validada al español (Ares et al. 2021, KSSTA). Cuestionario completo aún no construido — 36 ítems, tasa de finalización documentada del 43%: puede quedar incompleto.</p>
+      </div>
+
+      <!-- KUJALA -->
+      <div class="scale-box" data-scale="kujala" id="scalebox-kujala">
+        <div class="scale-box-top">
+          <span class="scale-name">Kujala Score (AKPS) <span class="scale-opt-badge" id="badge-kujala">Obligatorio</span></span>
+          <button type="button" class="expand-btn" onclick="toggleQ('q-kujala')">Desplegar cuestionario</button>
+        </div>
+        <div class="scale-inputs">
+          <div class="field" style="margin:0"><label>Puntaje Kujala total (0-100)</label><input type="number" id="kujala_total" min="0" max="100"></div>
+        </div>
+        <div class="questionnaire" id="q-kujala"></div>
+      </div>
+
+      <!-- BPII -->
+      <div class="scale-box" data-scale="bpii" id="scalebox-bpii">
+        <div class="scale-box-top">
+          <span class="scale-name">Banff Patellofemoral Instability Instrument 2.0 <span class="scale-opt-badge" id="badge-bpii">Obligatorio</span></span>
+          <button type="button" class="expand-btn" onclick="toggleQ('q-bpii')">Desplegar cuestionario</button>
+        </div>
+        <div class="scale-inputs">
+          <div class="field" style="margin:0"><label>Síntomas y molestias físicas (0-100)</label><input type="number" id="bpii_sintomas" step="0.1" min="0" max="100"></div>
+          <div class="field" style="margin:0"><label>Escuela/trabajo (0-100)</label><input type="number" id="bpii_trabajo" step="0.1" min="0" max="100"></div>
+          <div class="field" style="margin:0"><label>Recreación/deporte/actividad (0-100)</label><input type="number" id="bpii_deporte" step="0.1" min="0" max="100"></div>
+          <div class="field" style="margin:0"><label>Estilo de vida (0-100)</label><input type="number" id="bpii_estilo" step="0.1" min="0" max="100"></div>
+          <div class="field" style="margin:0"><label>Social y emocional (0-100)</label><input type="number" id="bpii_social" step="0.1" min="0" max="100"></div>
+          <div class="field" style="margin:0"><label>Puntaje BPII 2.0 total (0-100)</label><input type="number" id="bpii_total" step="0.1" min="0" max="100"></div>
+        </div>
+        <p class="hint">Validación psicométrica colombiana completa (Martínez-Cano JP, et al. 2024, OJSM — Fundación Valle del Lili, Cali). ICC test-retest 0.98, validez concurrente vs. Kujala r=0.74. 23 ítems VAS (0-100) en 5 dominios, sin ítems invertidos — puntaje = promedio de los ítems respondidos. Licencia CC BY 4.0.</p>
+        <div class="questionnaire" id="q-bpii"></div>
+      </div>
+
+      <!-- NPI (NORWICH) -->
+      <div class="scale-box" data-scale="npi" id="scalebox-npi">
+        <div class="scale-box-top">
+          <span class="scale-name">NPI — Norwich Patellofemoral Instability Score <span class="scale-opt-badge" id="badge-npi">Opcional</span></span>
+          <button type="button" class="expand-btn" onclick="toggleQ('q-npi')">Desplegar cuestionario</button>
+        </div>
+        <div class="scale-inputs">
+          <div class="field" style="margin:0"><label>Puntaje NPI (%)</label><input type="number" id="npi_total" step="0.1" min="0" max="100"></div>
+        </div>
+        <p class="hint">Validado al español (Martínez-Cano JP, et al. 2025, OJSM, DOI 10.1177/23259671251366674) — α 0.93, ICC 0.88, SEM 1.22. 19 ítems de frecuencia, puntaje 0-100% ponderado por dificultad de cada actividad (ítems no realizados se excluyen del cálculo). <strong>A diferencia de las demás escalas, en el NPI un puntaje MÁS ALTO indica MAYOR inestabilidad percibida</strong> (0%=sin inestabilidad, 100%=máxima).</p>
+        <div class="questionnaire" id="q-npi"></div>
+      </div>
+
+      <!-- VISA-P (solo Mecanismo extensor, tendón rotuliano) -->
+      <div class="scale-box" data-scale="visap" id="scalebox-visap">
+        <div class="scale-box-top">
+          <span class="scale-name">VISA-P <span class="scale-opt-badge" id="badge-visap">Opcional</span></span>
+          <button type="button" class="expand-btn" onclick="toggleQ('q-visap')">Desplegar cuestionario</button>
+        </div>
+        <div class="scale-inputs">
+          <div class="field" style="margin:0"><label>Puntaje VISA-P total (0-100)</label><input type="number" id="visap_total" step="1" min="0" max="100"></div>
+        </div>
+        <p class="hint">Validado al español (Hernández-Sánchez S, et al. 2011, J Orthop Sports Phys Ther 41(8):581-91). Diseñado originalmente para tendinopatía rotuliana, pero usado también tras reparo de ruptura del tendón rotuliano en la literatura (ej. VISA-P postop ~85.5). <strong>Solo aplica a tendón rotuliano — no a cuadricipital</strong>, por eso solo aparece habilitado cuando la estructura afectada marcada arriba es "Tendón rotuliano".</p>
+        <div class="questionnaire" id="q-visap"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="guardarVisita()">Guardar visita (prototipo, en memoria del navegador)</button>
+    <button class="btn btn-secondary" onclick="exportarJSON()">Exportar JSON</button>
+    <button class="btn btn-secondary" onclick="location.reload()">Limpiar formulario</button>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-h"><span class="n">✓</span>Lo que hay guardado en Supabase para este código de estudio</div>
+    <div class="card-b">
+      <div class="btn-row" style="margin-bottom:10px">
+        <button class="btn btn-secondary" style="flex:none" onclick="consultarGuardado()">Consultar de nuevo</button>
+      </div>
+      <table class="visits" id="tabla-visitas">
+        <thead><tr><th>Visita</th><th>Complicaciones</th><th>Lysholm</th><th>Guardado</th></tr></thead>
+        <tbody id="tabla-visitas-body"><tr><td colspan="4" style="color:var(--t3)">Guarda una visita para ver aquí la confirmación real desde Supabase.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Datos Lysholm ──
+const LY=[
+  {l:'1. Cojera',m:5,o:[['Ninguna',5],['Leve o periódica',3],['Grave y constante',0]]},
+  {l:'2. Apoyo',m:5,o:[['Ninguno',5],['Bastón o muleta',3],['No puede apoyar la pierna',0]]},
+  {l:'3. Bloqueo',m:15,o:[['Sin bloqueo y sin sensación de roce',15],['Sensación de roce a cada paso',10],['Bloqueo ocasional',6],['Bloqueo frecuente',2],['Bloqueo durante la valoración',0]]},
+  {l:'4. Inestabilidad',m:25,o:[['Nunca',25],['Raramente en actividades deportivas / esfuerzos intensos',20],['Con frecuencia en actividades deportivas / esfuerzos intensos',15],['De vez en cuando en tareas cotidianas',10],['A menudo en tareas cotidianas',5],['En cada paso',0]]},
+  {l:'5. Dolor',m:25,o:[['Ningún dolor',25],['Inconstante y leve en esfuerzos intensos',20],['Marcado en esfuerzos intensos',15],['Marcado durante o tras caminar más de 2 km',10],['Marcado durante o tras caminar menos de 2 km',5],['Dolor constante',0]]},
+  {l:'6. Inflamación',m:10,o:[['Ninguna',10],['En esfuerzos intensos',6],['En esfuerzos cotidianos',2],['Constante',0]]},
+  {l:'7. Subir escaleras',m:10,o:[['Sin problemas',10],['Problemas leves',6],['Sube los escalones de uno en uno',2],['Imposible',0]]},
+  {l:'8. Cuclillas',m:5,o:[['Sin problemas',5],['Problemas leves',4],['No más de 90 grados',2],['Imposible',0]]}
+];
+function buildLysholmQ(){
+  const wrap=document.getElementById('q-lysholm');
+  wrap.innerHTML='';
+  LY.forEach((it,i)=>{
+    const opts=it.o.map(o=>`<label class="q-opt"><input type="radio" name="ly${i}" value="${o[1]}" onchange="calcLysholm()"><span>${o[0]}</span><span class="q-pts">${o[1]} pts</span></label>`).join('');
+    wrap.innerHTML+=`<div class="q-block"><div class="q-label">${it.l} (máx. ${it.m})</div><div class="q-opts">${opts}</div></div>`;
+  });
+}
+function calcLysholm(){
+  let total=0,answered=0;
+  LY.forEach((it,i)=>{
+    const sel=document.querySelector(`input[name="ly${i}"]:checked`);
+    if(sel){total+=parseInt(sel.value);answered++;}
+  });
+  if(answered===LY.length) document.getElementById('lysholm_total').value=total;
+}
+
+// ── Datos IKDC ──
+const IKDC_MAX={p1:4,p2:10,p3:10,p4:4,p5:4,p6:1,p7:4,p8:4,p9a:4,p9b:4,p9c:4,p9d:4,p9e:4,p9f:4,p9g:4,p9h:4,p9i:4,p10b:10};
+const ikdcScores={};
+const ACT_OPTS=[['Actividades muy extenuantes (saltar/pivotar)',4],['Actividades extenuantes (trabajo físico pesado, esquí, tenis)',3],['Actividades moderadas (trabajo físico moderado, correr)',2],['Actividades ligeras (caminar, tareas domésticas)',1],['Incapaz por dolor de rodilla',0]];
+function buildIkdcQ(){
+  const wrap=document.getElementById('q-ikdc');
+  wrap.innerHTML='';
+  const mkOpts=(key,opts)=>opts.map(o=>`<label class="q-opt"><input type="radio" name="${key}" value="${o[1]}" onchange="ikdcScores['${key}']=${o[1]};calcIkdc()"><span>${o[0]}</span><span class="q-pts">${o[1]}</span></label>`).join('');
+  const questions=[
+    ['p1','1. Nivel más alto de actividad sin dolor significativo',ACT_OPTS],
+    ['p4','4. ¿Cuán rígida o hinchada ha estado la rodilla?',[['Nada',4],['Leve',3],['Moderado',2],['Mucho',1],['Extremo',0]]],
+    ['p5','5. Nivel máximo de actividad sin que se hinche la rodilla',ACT_OPTS],
+    ['p6','6. ¿Se le ha quedado la rodilla bloqueada?',[['Sí',0],['No',1]]],
+    ['p7','7. Nivel máximo de actividad sin sentir la rodilla inestable',ACT_OPTS],
+    ['p8','8. Nivel más alto de actividad regular',ACT_OPTS],
+  ];
+  questions.forEach(([key,label,opts])=>{
+    wrap.innerHTML+=`<div class="q-block"><div class="q-label">${label}</div><div class="q-opts">${mkOpts(key,opts)}</div></div>`;
+  });
+  [['p2','2. Frecuencia de dolor (últimas 4 semanas): 0=Nunca, 10=Constante',true],
+   ['p3','3. Intensidad de dolor: 0=Sin dolor, 10=Con mucho dolor',true]].forEach(([key,label,inv])=>{
+    let opts='';
+    for(let i=0;i<=10;i++){const val=inv?(10-i):i;opts+=`<label class="q-opt" style="display:inline-flex;margin:2px"><input type="radio" name="${key}" value="${val}" onchange="ikdcScores['${key}']=${val};calcIkdc()">${i}</label>`;}
+    wrap.innerHTML+=`<div class="q-block"><div class="q-label">${label}</div><div style="display:flex;flex-wrap:wrap">${opts}</div></div>`;
+  });
+  const p9items=[['p9a','Subir escaleras'],['p9b','Bajar escaleras'],['p9c','Arrodillarse'],['p9d','Cuclillas'],['p9e','Sentarse con rodilla flexionada'],['p9f','Levantarse de una silla'],['p9g','Correr en línea recta'],['p9h','Saltar y aterrizar'],['p9i','Parar y arrancar rápido']];
+  p9items.forEach(([key,label])=>{
+    const opts=[['Nada difícil',4],['Mínima dif.',3],['Moderada dif.',2],['Extrema dif.',1],['Incapaz',0]];
+    wrap.innerHTML+=`<div class="q-block"><div class="q-label">9. ${label}</div><div class="q-opts">${mkOpts(key,opts)}</div></div>`;
+  });
+  let opts10='';
+  for(let i=0;i<=10;i++){opts10+=`<label class="q-opt" style="display:inline-flex;margin:2px"><input type="radio" name="p10b" value="${i}" onchange="ikdcScores['p10b']=${i};calcIkdc()">${i}</label>`;}
+  wrap.innerHTML+=`<div class="q-block"><div class="q-label">10b. Función actual de la rodilla (0=no podía hacer actividades, 10=sin limitación)</div><div style="display:flex;flex-wrap:wrap">${opts10}</div></div>`;
+}
+function calcIkdc(){
+  const keys=Object.keys(IKDC_MAX);
+  let suma=0,maxPosible=0,respondidos=0;
+  keys.forEach(k=>{if(ikdcScores[k]!==undefined){suma+=ikdcScores[k];maxPosible+=IKDC_MAX[k];respondidos++;}});
+  if(respondidos>=16){
+    const puntaje=Math.round((suma/maxPosible)*100*10)/10;
+    document.getElementById('ikdc_total').value=puntaje;
+    document.getElementById('ikdc_incluir').checked=true;
+    document.getElementById('ikdc_total').disabled=false;
+  }
+}
+
+// ── Datos Oxford ──
+const OX=[
+  {l:'1. Dolor habitual en la rodilla',o:[['Sin dolor',4],['Muy leve',3],['Leve',2],['Moderado',1],['Grave',0]]},
+  {l:'2. Dificultad para lavarse y secarse',o:[['Ninguna',4],['Poca',3],['Moderada',2],['Mucha',1],['Incapaz',0]]},
+  {l:'3. Dificultad para entrar y salir del coche',o:[['Ninguna',4],['Poca',3],['Moderada',2],['Mucha',1],['Incapaz',0]]},
+  {l:'4. Tiempo que camina antes de dolor intenso',o:[['Más de 30 min',4],['16–30 min',3],['5–15 min',2],['Solo por la casa',1],['Imposible / ningún dolor',0]]},
+  {l:'5. Dolor al levantarse de estar sentado',o:[['Ningún dolor',4],['Leve',3],['Moderado',2],['Intenso',1],['Insoportable',0]]},
+  {l:'6. Cojera al caminar',o:[['Raramente / nunca',4],['A veces / solo al inicio',3],['Con frecuencia',2],['La mayoría del tiempo',1],['Siempre',0]]},
+  {l:'7. ¿Puede arrodillarse y levantarse?',o:[['Sí, fácilmente',4],['Con algo de dificultad',3],['Con mucha dificultad',2],['Muy difícil, con dolor',1],['No',0]]},
+  {l:'8. Dolor nocturno en cama',o:[['Nunca',4],['Solo 1–2 noches',3],['Algunas noches',2],['La mayoría de las noches',1],['Siempre',0]]},
+  {l:'9. Interferencia en trabajo/labores',o:[['Nada',4],['Un poco',3],['Moderadamente',2],['Mucho',1],['Totalmente',0]]},
+  {l:'10. ¿Siente que la rodilla falla?',o:[['Nunca',4],['Raramente',3],['A veces',2],['Con frecuencia',1],['Siempre',0]]},
+  {l:'11. ¿Puede hacer la compra?',o:[['Sí, fácilmente',4],['Con algo de dificultad',3],['Con mucha dificultad',2],['Gran dificultad',1],['No',0]]},
+  {l:'12. ¿Puede bajar un tramo de escaleras?',o:[['Sí, fácilmente',4],['Con algo de dificultad',3],['Con mucha dificultad',2],['Gran dificultad',1],['No',0]]}
+];
+function buildOxfordQ(){
+  const wrap=document.getElementById('q-oxford');
+  wrap.innerHTML='';
+  OX.forEach((it,i)=>{
+    const opts=it.o.map(o=>`<label class="q-opt"><input type="radio" name="ox${i}" value="${o[1]}" onchange="calcOxford()"><span>${o[0]}</span><span class="q-pts">${o[1]} pts</span></label>`).join('');
+    wrap.innerHTML+=`<div class="q-block"><div class="q-label">${it.l}</div><div class="q-opts">${opts}</div></div>`;
+  });
+}
+function calcOxford(){
+  let total=0,answered=0;
+  OX.forEach((it,i)=>{
+    const sel=document.querySelector(`input[name="ox${i}"]:checked`);
+    if(sel){total+=parseInt(sel.value);answered++;}
+  });
+  if(answered===OX.length) document.getElementById('oxford_total').value=total;
+}
+
+// ── Datos Kujala ──
+const KU=[
+  {l:'1. Cojera',m:5,o:[['Ninguna',5],['Leve',3],['Constante',0]]},
+  {l:'2. Apoyo al caminar',m:5,o:[['Ninguno',5],['Bastón',3],['Imposible sin apoyo',0]]},
+  {l:'3. Capacidad para caminar',m:5,o:[['Sin problema',5],['Limitada pero >1 km',4],['Con dificultad ~1 km',3],['Menos de 1 km',2],['Solo en casa',1],['Imposible',0]]},
+  {l:'4. Escaleras',m:10,o:[['Sin problema',10],['Ligera dificultad',8],['Peldaño a peldaño',5],['Con dolor bajando',2],['Imposible',0]]},
+  {l:'5. Cuclillas',m:5,o:[['Sin problema',5],['Ligera dificultad',4],['No más de 90°',3],['Solo parcialmente',2],['Imposible',0]]},
+  {l:'6. Correr',m:10,o:[['Sin problema',10],['Con ligero dolor',8],['Ligeramente doloroso',6],['Muy doloroso',3],['Imposible',0]]},
+  {l:'7. Saltar',m:10,o:[['Sin problema',10],['Ligero dolor',7],['Dolor moderado',2],['Imposible',0]]},
+  {l:'8. Sentado con rodilla doblada',m:10,o:[['Sin dolor',10],['Dolor solo al levantarse',8],['Dolor antes de 1 hora',6],['Dolor a los 30 min',4],['Dolor a los 10 min',2],['Dolor inmediato',0]]},
+  {l:'9. Dolor',m:10,o:[['Ninguno',10],['Ocasional y leve',8],['Moderado',6],['Frecuente',4],['Constante',2],['Insoportable',0]]},
+  {l:'10. Hinchazón',m:10,o:[['Ninguna',10],['Después de deporte intenso',8],['Después de caminar >2 km',6],['Después de actividades cotidianas',4],['Constante',0]]},
+  {l:'11. Atrofia del muslo',m:5,o:[['Ninguna',5],['Ligera',3],['Mucha',0]]},
+  {l:'12. Flexión de rodilla',m:5,o:[['Normal (>130°)',5],['Ligeramente limitada',4],['No más de 90°',3],['No más de 60°',2],['No más de 30°',1],['Imposible',0]]},
+  {l:'13. Patrón de inicio del dolor',m:5,o:[['Sin inicio de dolor',5],['A veces al empezar actividad',3],['Al comenzar y después de actividad',1],['Siempre presente',0]]}
+];
+function buildKujalaQ(){
+  const wrap=document.getElementById('q-kujala');
+  wrap.innerHTML='';
+  KU.forEach((it,i)=>{
+    const opts=it.o.map(o=>`<label class="q-opt"><input type="radio" name="ku${i}" value="${o[1]}" onchange="calcKujala()"><span>${o[0]}</span><span class="q-pts">${o[1]} pts</span></label>`).join('');
+    wrap.innerHTML+=`<div class="q-block"><div class="q-label">${it.l} (máx. ${it.m})</div><div class="q-opts">${opts}</div></div>`;
+  });
+}
+function calcKujala(){
+  let total=0,answered=0;
+  KU.forEach((it,i)=>{
+    const sel=document.querySelector(`input[name="ku${i}"]:checked`);
+    if(sel){total+=parseInt(sel.value);answered++;}
+  });
+  if(answered===KU.length) document.getElementById('kujala_total').value=total;
+}
+
+// ── Datos KOOS (Vaquero et al. 2014, KSSTA — versión española validada) ──
+const KOOS_SECS=[
+  {k:'dolor',field:'koos_dolor',l:'Dolor',max:36,qs:['¿Con qué frecuencia experimenta dolor en su rodilla?','Al girar o torcer la rodilla','Al estirar completamente la rodilla','Al doblar completamente la rodilla','Al caminar por terreno llano','Al subir o bajar escaleras','Por la noche mientras está en cama','Al estar sentado o tumbado','Al estar de pie']},
+  {k:'sintomas',field:'koos_sintomas',l:'Síntomas',max:28,qs:['¿Tiene la rodilla hinchada?','¿Nota crujidos, chasquidos u otros ruidos al mover la rodilla?','¿Se le queda la rodilla bloqueada o atrapada?','¿Puede estirar la rodilla completamente?','¿Puede doblar la rodilla completamente?','¿Tiene rigidez al despertarse por la mañana?','¿Tiene rigidez después de estar en reposo?'],invItems:[3,4]},
+  {k:'avd',field:'koos_avd',l:'Actividades diarias',max:68,qs:['Bajar escaleras','Subir escaleras','Levantarse estando sentado','Estar de pie','Agacharse / recoger algo del suelo','Caminar en terreno llano','Entrar y salir del coche','Ir de compras','Ponerse calcetines o medias','Levantarse de la cama','Quitarse calcetines o medias','Tenderse en la cama','Entrar/salir de la bañera o ducha','Estar sentado','Levantarse del inodoro','Trabajo doméstico pesado','Trabajo doméstico ligero']},
+  {k:'deporte',field:'koos_deporte',l:'Deporte / Recreación',max:20,qs:['Ponerse en cuclillas','Correr','Saltar','Girar / pivotear sobre la rodilla','Arrodillarse']},
+  {k:'qol',field:'koos_qol',l:'Calidad de vida',max:16,qs:['¿Con qué frecuencia es consciente de su problema de rodilla?','¿Ha modificado su estilo de vida para evitar daño a la rodilla?','¿Cuánto le preocupa no mantener el nivel de actividad deseado?','¿Cuánta dificultad tiene en general en su rodilla?']}
+];
+const KOOS_OPTS=[['0','Nunca / Ninguno'],['1','Raramente / Leve'],['2','A veces / Moderado'],['3','Frecuente / Severo'],['4','Siempre / Extremo']];
+function buildKoosQ(){
+  const wrap=document.getElementById('q-koos');
+  let html='';
+  KOOS_SECS.forEach(sec=>{
+    const note=sec.invItems?' — ★ ítems marcados se invierten en el cálculo (más = mejor)':'';
+    html+=`<div class="q-domain-title">${sec.l}${note}</div>`;
+    sec.qs.forEach((q,i)=>{
+      const inv=sec.invItems&&sec.invItems.includes(i);
+      const opts=KOOS_OPTS.map(o=>{
+        const val=inv?(4-parseInt(o[0])):parseInt(o[0]);
+        return `<label class="q-opt"><input type="radio" name="koos_${sec.k}_${i}" value="${val}" onchange="calcKoosQ()"><span>${o[1]}${inv?' ★':''}</span><span class="q-pts">${val}</span></label>`;
+      }).join('');
+      html+=`<div class="q-block"><div class="q-label">${q}</div><div class="q-opts">${opts}</div></div>`;
+    });
+  });
+  wrap.innerHTML=html;
+}
+function calcKoosQ(){
+  KOOS_SECS.forEach(sec=>{
+    let sum=0,answered=0;
+    sec.qs.forEach((_,i)=>{
+      const sel=document.querySelector(`input[name="koos_${sec.k}_${i}"]:checked`);
+      if(sel){sum+=parseInt(sel.value);answered++;}
+    });
+    if(answered===sec.qs.length){
+      document.getElementById(sec.field).value=Math.round(100-(sum/sec.max)*100);
+    }
+  });
+}
+
+// ── Datos ACL-QOL (Donat-Roca et al. 2023, OJSM — adaptación cultural española) ──
+const ACLQOL_DOMAINS=[
+  {key:'sintomas',field:'aclqol_sintomas',label:'Síntomas y molestias físicas',items:[
+    {l:'1a. ¿Hasta qué punto le da problemas que su rodilla falle y cuán grave son esos fallos?',left:'Fallos graves',right:'Fallos leves'},
+    {l:'1b. ¿Cuál es la frecuencia de sus fallos?',left:'Fallos constantes',right:'Nunca falla'},
+    {l:'2. Con actividad prolongada (más de media hora), ¿cuánto dolor o molestias siente?',left:'Muchísimo dolor',right:'Ningún dolor'},
+    {l:'3. ¿Hasta qué punto tiene problemas por rigidez o pérdida de movimiento?',left:'Muchísimos problemas',right:'Ningún problema'},
+    {l:'4. ¿Cuán débil está su rodilla en relación con la fuerza muscular?',left:'Extremadamente débil',right:'Nada débil'}
+  ]},
+  {key:'trabajo',field:'aclqol_trabajo',label:'Problemas en el trabajo',naCheckbox:{id:'aclqol_na_trabajo',label:'Actualmente no tiene trabajo por motivos ajenos a la rodilla (excluye este dominio)'},items:[
+    {l:'5. ¿Cuánta dificultad tiene para hacer giros o pivotar en el trabajo?',left:'Muchísimas dificultades',right:'Ninguna dificultad'},
+    {l:'6. ¿Cuánta dificultad tiene para ponerse en cuclillas en el trabajo?',left:'Muchísimas dificultades',right:'Ninguna dificultad'},
+    {l:'7. ¿Cuánto le preocupa perder días de trabajo por la lesión (o una recaída)?',left:'Muchísima preocupación',right:'Ninguna preocupación'},
+    {l:'8. ¿Cuánto le preocupa perder tiempo de estudios/trabajo por el tratamiento?',left:'Muchísima preocupación',right:'Ninguna preocupación'}
+  ]},
+  {key:'deporte',field:'aclqol_deporte',label:'Deporte / ocio / competición',items:[
+    {l:'9. ¿Hasta qué punto se siente limitado en giros, pivotación o cambios de dirección bruscos?',left:'Completamente limitado',right:'Nada limitado'},
+    {l:'10. ¿Le preocupa que la actividad deportiva/recreativa empeore la rodilla?',left:'Me preocupa muchísimo',right:'No me preocupa nada'},
+    {l:'11. ¿Cómo es su rendimiento deportivo/recreativo actual comparado con antes de la lesión?',left:'Totalmente limitado',right:'Nada limitado'},
+    {l:'12. ¿Cuánto han variado sus expectativas deportivas por el estado de la rodilla?',left:'Expectativas totalmente reducidas',right:'Expectativas nada reducidas'},
+    {l:'13. ¿Tiene que realizar su práctica deportiva/recreativa con precaución?',left:'Siempre con precaución',right:'Nunca con precaución'},
+    {l:'14. ¿Cuánto miedo tiene a que la rodilla "falle" en actividad deportiva/recreativa?',left:'Muchísimo miedo',right:'Ningún miedo'},
+    {l:'15. ¿Le preocupan las condiciones del entorno (campo mojado, pista dura, etc.)?',left:'Me preocupa muchísimo',right:'No me preocupa en absoluto'},
+    {l:'16. ¿Le resulta frustrante tener que pensar en la rodilla al hacer deporte?',left:'Muy frustrante',right:'Nada frustrante'},
+    {l:'17. ¿Hasta qué punto le es difícil dar el 100% en la práctica deportiva/recreativa?',left:'Muy difícil',right:'Nada difícil'},
+    {l:'18. ¿Le da miedo practicar deportes de contacto?',left:'Muchísimo miedo',right:'Ningún miedo',naCheckbox:{id:'aclqol_na_contacto',label:'No practica deportes de contacto por motivos ajenos a la rodilla (excluye este ítem)'}},
+    {l:'19. ¿Hasta qué punto se ve limitado en su práctica deportiva/recreativa más importante?',left:'Muy limitado',right:'Nada limitado'},
+    {l:'20. ¿Hasta qué punto se ve limitado en su segunda práctica deportiva/recreativa más importante?',left:'Muy limitado',right:'Nada limitado'}
+  ]},
+  {key:'estilo',field:'aclqol_estilo',label:'Estilo de vida',items:[
+    {l:'21. ¿Se preocupa por seguridad general (ej. llevar a un niño en brazos, tareas domésticas)?',left:'Muy preocupado',right:'Nada preocupado'},
+    {l:'22. ¿Hasta qué punto su capacidad de hacer ejercicio y mantenerse en forma se ha limitado?',left:'Totalmente limitada',right:'Nada limitada'},
+    {l:'23. ¿Hasta qué punto su lesión de rodilla limita que disfrute de la vida?',left:'Totalmente limitada',right:'Nada limitada'},
+    {l:'24. ¿Con qué frecuencia le viene a la mente el problema de su rodilla?',left:'Constantemente',right:'Jamás'},
+    {l:'25. ¿Le preocupa su rodilla en las actividades cotidianas con su familia?',left:'Me preocupa muchísimo',right:'No me preocupa nada'},
+    {l:'26. ¿Ha modificado su estilo de vida para evitar actividades perjudiciales para la rodilla?',left:'Totalmente modificado',right:'Nada modificado'}
+  ]},
+  {key:'social',field:'aclqol_social',label:'Ámbito social y emocional',items:[
+    {l:'27. ¿Le preocupa no volver a ser competitivo a causa de su problema de rodilla?',left:'Me preocupa muchísimo',right:'No me preocupa nada'},
+    {l:'28. ¿Le está siendo / ha sido difícil afrontar psicológicamente el problema de rodilla?',left:'Muy difícil',right:'Nada difícil'},
+    {l:'29. ¿Con qué frecuencia teme por su rodilla?',left:'Constantemente',right:'Jamás'},
+    {l:'30. ¿Hasta qué nivel le da problemas su falta de confianza en la rodilla?',left:'Muchísimos problemas',right:'Ningún problema'},
+    {l:'31. ¿Cuánto miedo tiene a volver a lesionarse la rodilla?',left:'Muchísimo miedo',right:'Ningún miedo'}
+  ]}
+];
+function buildAclqolQ(){
+  const wrap=document.getElementById('q-aclqol');
+  let html='';
+  ACLQOL_DOMAINS.forEach(dom=>{
+    html+=`<div class="q-domain-title">${dom.label}</div>`;
+    if(dom.naCheckbox){
+      html+=`<label class="q-vas-na"><input type="checkbox" id="${dom.naCheckbox.id}" onchange="calcAclqol()">${dom.naCheckbox.label}</label>`;
+    }
+    dom.items.forEach((it,i)=>{
+      const id=`aclqolq_${dom.key}_${i}`;
+      html+=`<div class="q-block">
+        <div class="q-label">${it.l}</div>
+        <div class="q-vas-scale">
+          <span class="q-vas-anchor">${it.left}</span>
+          <input type="range" min="0" max="100" step="10" value="50" id="${id}" data-answered="0" oninput="this.dataset.answered='1';document.getElementById('${id}_val').textContent=this.value;calcAclqol()">
+          <span class="q-vas-anchor right">${it.right}</span>
+          <span class="q-vas-val" id="${id}_val">—</span>
+        </div>
+        ${it.naCheckbox?`<label class="q-vas-na"><input type="checkbox" id="${it.naCheckbox.id}" onchange="calcAclqol()">${it.naCheckbox.label}</label>`:''}
+      </div>`;
+    });
+  });
+  wrap.innerHTML=html;
+}
+function calcAclqol(){
+  let allVals=[],complete=true;
+  ACLQOL_DOMAINS.forEach(dom=>{
+    const field=document.getElementById(dom.field);
+    if(dom.naCheckbox && document.getElementById(dom.naCheckbox.id).checked){
+      field.value='';field.placeholder='No aplica';
+      return;
+    }
+    let vals=[],domComplete=true;
+    dom.items.forEach((it,i)=>{
+      if(it.naCheckbox && document.getElementById(it.naCheckbox.id).checked) return;
+      const el=document.getElementById(`aclqolq_${dom.key}_${i}`);
+      if(el.dataset.answered==='1'){vals.push(parseFloat(el.value));}
+      else{domComplete=false;}
+    });
+    if(!domComplete) complete=false;
+    if(vals.length) field.value=(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+    allVals=allVals.concat(vals);
+  });
+  if(complete && allVals.length){
+    document.getElementById('aclqol_total').value=(allVals.reduce((a,b)=>a+b,0)/allVals.length).toFixed(1);
+  }
+}
+
+// ── Datos BPII 2.0 (Martínez-Cano JP, et al. 2024, OJSM — versión española validada, CC BY 4.0) ──
+const BPII_DOMAINS=[
+  {key:'sintomas',field:'bpii_sintomas',label:'Síntomas y molestias físicas',items:[
+    {l:'1. ¿Qué tan preocupado/a lo tiene que su rótula "salga de pronto" o sea inestable?',left:'Extremadamente preocupado/a',right:'No le preocupa en absoluto'},
+    {l:'2. Dolor/molestia en la rodilla con actividad prolongada (más de 30 min)',left:'Dolor severo',right:'No hay dolor en absoluto'},
+    {l:'3. Dolor/molestia al estar sentado mucho tiempo (más de 30 min)',left:'Dolor severo',right:'No hay dolor en absoluto'},
+    {l:'4. ¿Tiene pérdida de movilidad en su rodilla?',left:'Pérdida severa de movilidad',right:'No hay pérdida de movilidad'},
+    {l:'5. ¿Qué tan débil se siente su rodilla?',left:'Extremadamente débil',right:'No hay debilidad en absoluto'}
+  ]},
+  {key:'trabajo',field:'bpii_trabajo',label:'Trabajo y/o escuela',items:[
+    {l:'6. Dificultad con giros o pivote en el trabajo/escuela',left:'Extrema dificultad',right:'No hay dificultad en absoluto'},
+    {l:'7. Dificultad al hacer sentadillas en el trabajo/escuela',left:'Extrema dificultad',right:'No hay dificultad en absoluto'},
+    {l:'8. Preocupación por perder tiempo de trabajo/escuela',left:'Extrema preocupación',right:'No le preocupa en absoluto'},
+    {l:'9. Dificultades financieras por la lesión de rodilla',left:'Severa dificultad financiera',right:'No hay dificultad financiera'}
+  ]},
+  {key:'deporte',field:'bpii_deporte',label:'Recreación / deporte / actividad',items:[
+    {l:'10. Preocupación de que la actividad deportiva empeore la rodilla',left:'Extrema preocupación',right:'No le preocupa en absoluto'},
+    {l:'11. ¿Debe participar con precaución?',left:'Siempre con precaución',right:'Nunca con precaución'},
+    {l:'12. Temor a que la rodilla "salga de pronto" durante la actividad',left:'Temor extremo',right:'No hay temor en absoluto'},
+    {l:'13. Preocupación por caminar en terreno irregular, húmedo o con hielo',left:'Extrema preocupación',right:'No le preocupa en absoluto'},
+    {l:'14. ¿Es capaz de dar su máximo esfuerzo deportivo?',left:'Nunca es capaz',right:'Siempre es capaz'}
+  ]},
+  {key:'estilo',field:'bpii_estilo',label:'Estilo de vida',items:[
+    {l:'15. Preocupación por seguridad general (escaleras, manejar, cargar niños)',left:'Extrema preocupación',right:'No le preocupa en absoluto'},
+    {l:'16. Limitación para ejercitarse y mantenerse en forma',left:'Totalmente limitada',right:'No se ha limitado en absoluto'},
+    {l:'17. Limitación para disfrutar la vida',left:'Totalmente limitado/a',right:'No se ha limitado en absoluto'},
+    {l:'18. ¿Evita actividades con familia/amigos por la rodilla?',left:'Siempre lo evita',right:'Nunca lo evita'},
+    {l:'19. ¿Debe planear más que otros las actividades sociales?',left:'Siempre debe planear',right:'Nunca debe planear'}
+  ]},
+  {key:'social',field:'bpii_social',label:'Social y emocional',items:[
+    {l:'20. Frustración por no cumplir necesidades recreativas/competitivas',left:'Extremadamente frustrado/a',right:'No le frustra en absoluto'},
+    {l:'21. Dificultad para lidiar emocionalmente con el problema',left:'Extrema dificultad',right:'No se dificulta en absoluto'},
+    {l:'22. ¿Qué tan a menudo está nervioso/a por su rodilla?',left:'Siempre está nervioso/a',right:'Nunca está nervioso/a'},
+    {l:'23. Temor a volver a lesionar la rodilla',left:'Extremadamente temeroso/a',right:'No está temeroso/a en absoluto'}
+  ]}
+];
+function buildBpiiQ(){
+  const wrap=document.getElementById('q-bpii');
+  let html='';
+  BPII_DOMAINS.forEach(dom=>{
+    html+=`<div class="q-domain-title">${dom.label}</div>`;
+    dom.items.forEach((it,i)=>{
+      const id=`bpiiq_${dom.key}_${i}`;
+      html+=`<div class="q-block">
+        <div class="q-label">${it.l}</div>
+        <div class="q-vas-scale">
+          <span class="q-vas-anchor">${it.left}</span>
+          <input type="range" min="0" max="100" step="10" value="50" id="${id}" data-answered="0" oninput="this.dataset.answered='1';document.getElementById('${id}_val').textContent=this.value;calcBpiiQ()">
+          <span class="q-vas-anchor right">${it.right}</span>
+          <span class="q-vas-val" id="${id}_val">—</span>
+        </div>
+      </div>`;
+    });
+  });
+  wrap.innerHTML=html;
+}
+function calcBpiiQ(){
+  let allVals=[],complete=true;
+  BPII_DOMAINS.forEach(dom=>{
+    const field=document.getElementById(dom.field);
+    let vals=[];
+    dom.items.forEach((it,i)=>{
+      const el=document.getElementById(`bpiiq_${dom.key}_${i}`);
+      if(el.dataset.answered==='1'){vals.push(parseFloat(el.value));}
+      else{complete=false;}
+    });
+    if(vals.length===dom.items.length) field.value=(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+    allVals=allVals.concat(vals);
+  });
+  if(complete) document.getElementById('bpii_total').value=(allVals.reduce((a,b)=>a+b,0)/allVals.length).toFixed(1);
+}
+
+// ── Datos NPI / Norwich (Martínez-Cano JP, et al. 2025, OJSM — versión española validada) ──
+const NPI=[
+  {l:'1. Girando/cambiando de dirección en el deporte o juego',m:5,o:[['Siempre',5],['Frecuentemente',4],['Algunas veces',3],['Rara vez',2],['Nunca',0],['No lo hace','NA']]},
+  {l:'2. Cambiando de dirección mientras corre',m:7,o:[['Siempre',7],['Frecuentemente',5],['Algunas veces',3],['Rara vez',2],['Nunca',0],['No lo hace','NA']]},
+  {l:'3. Corriendo en línea recta sobre superficie irregular',m:7,o:[['Siempre',7],['Frecuentemente',5],['Algunas veces',3],['Rara vez',2],['Nunca',0],['No lo hace','NA']]},
+  {l:'4. Caminando en superficie resbalosa, húmeda o congelada',m:7,o:[['Siempre',7],['Frecuentemente',5],['Algunas veces',3],['Rara vez',2],['Nunca',0],['No lo hace','NA']]},
+  {l:'5. Corriendo de lado',m:10,o:[['Siempre',10],['Frecuentemente',7],['Algunas veces',5],['Rara vez',3],['Nunca',0],['No lo hace','NA']]},
+  {l:'6. Dando pequeños saltos',m:10,o:[['Siempre',10],['Frecuentemente',7],['Algunas veces',5],['Rara vez',3],['Nunca',0],['No lo hace','NA']]},
+  {l:'7. Dando grandes saltos',m:10,o:[['Siempre',10],['Frecuentemente',7],['Algunas veces',5],['Rara vez',3],['Nunca',0],['No lo hace','NA']]},
+  {l:'8. Corriendo en línea recta sobre superficie regular',m:10,o:[['Siempre',10],['Frecuentemente',7],['Algunas veces',5],['Rara vez',3],['Nunca',0],['No lo hace','NA']]},
+  {l:'9. Bajando las escaleras',m:10,o:[['Siempre',10],['Frecuentemente',7],['Algunas veces',5],['Rara vez',3],['Nunca',0],['No lo hace','NA']]},
+  {l:'10. Haciendo una sentadilla',m:10,o:[['Siempre',10],['Frecuentemente',7],['Algunas veces',5],['Rara vez',3],['Nunca',0],['No lo hace','NA']]},
+  {l:'11. Arrodillándose',m:10,o:[['Siempre',10],['Frecuentemente',7],['Algunas veces',5],['Rara vez',3],['Nunca',0],['No lo hace','NA']]},
+  {l:'12. Caminando en línea recta sobre superficie irregular',m:15,o:[['Siempre',15],['Frecuentemente',10],['Algunas veces',7],['Rara vez',5],['Nunca',0],['No lo hace','NA']]},
+  {l:'13. Subiendo las escaleras',m:15,o:[['Siempre',15],['Frecuentemente',10],['Algunas veces',7],['Rara vez',5],['Nunca',0],['No lo hace','NA']]},
+  {l:'14. Subiéndose o pasando por encima de un escalón alto',m:15,o:[['Siempre',15],['Frecuentemente',10],['Algunas veces',7],['Rara vez',5],['Nunca',0],['No lo hace','NA']]},
+  {l:'15. Cruzando las piernas al sentarse',m:15,o:[['Siempre',15],['Frecuentemente',10],['Algunas veces',7],['Rara vez',5],['Nunca',0],['No lo hace','NA']]},
+  {l:'16. Caminando en línea recta sobre superficie regular',m:22,o:[['Siempre',22],['Frecuentemente',15],['Algunas veces',10],['Rara vez',7],['Nunca',0],['No lo hace','NA']]},
+  {l:'17. Subiendo o bajando de un carro',m:22,o:[['Siempre',22],['Frecuentemente',15],['Algunas veces',10],['Rara vez',7],['Nunca',0],['No lo hace','NA']]},
+  {l:'18. Girando un carrito pesado en el pasillo del supermercado',m:25,o:[['Siempre',25],['Frecuentemente',22],['Algunas veces',15],['Rara vez',10],['Nunca',0],['No lo hace','NA']]},
+  {l:'19. Girando a mirar por encima de su hombro',m:25,o:[['Siempre',25],['Frecuentemente',22],['Algunas veces',15],['Rara vez',10],['Nunca',0],['No lo hace','NA']]}
+];
+function buildNpiQ(){
+  const wrap=document.getElementById('q-npi');
+  wrap.innerHTML='';
+  NPI.forEach((it,i)=>{
+    const opts=it.o.map(o=>`<label class="q-opt"><input type="radio" name="np${i}" value="${o[1]}" onchange="calcNpiQ()"><span>${o[0]}</span><span class="q-pts">${o[1]==='NA'?'N/A':o[1]+' pts (máx. '+it.m+')'}</span></label>`).join('');
+    wrap.innerHTML+=`<div class="q-block"><div class="q-label">${it.l}</div><div class="q-opts">${opts}</div></div>`;
+  });
+}
+function calcNpiQ(){
+  let num=0,den=0,answered=0;
+  NPI.forEach((it,i)=>{
+    const sel=document.querySelector(`input[name="np${i}"]:checked`);
+    if(sel){
+      answered++;
+      if(sel.value!=='NA'){num+=parseInt(sel.value);den+=it.m;}
+    }
+  });
+  if(answered===NPI.length && den>0) document.getElementById('npi_total').value=Math.round((num/den)*1000)/10;
+}
+
+// ── Datos VISA-P (Hernández-Sánchez S, et al. 2011, JOSPT — VISA-P-SP validado, Consejo General de Colegios de Fisioterapeutas de España) ──
+const VISAP_Q1_OPTS=[['0-15 min',0],['15-30 min',2],['30-60 min',4],['60-90 min',6],['90-120 min',8],['>120 min',10]];
+const VISAP_PAIN_ITEMS=[
+  '2. ¿Le duele al bajar escaleras con paso normal?',
+  '3. ¿Le duele la rodilla al extenderla completamente sin apoyar el pie en el suelo?',
+  '4. ¿Tiene dolor en la rodilla al realizar un gesto de "zancada" (flexión de rodilla tras un movimiento amplio hacia delante con carga completa del peso corporal sobre la pierna adelantada)?',
+  '5. ¿Tiene problemas para ponerse en cuclillas?',
+  '6. ¿Le duele al hacer 10 saltos seguidos sobre la pierna afectada o inmediatamente después de hacerlo?'
+];
+const VISAP_Q7_OPTS=[['No, en absoluto',0],['Entrenamiento modificado y/o competición modificada',4],['Entrenamiento completo y/o competición, pero a menor nivel que cuando empezaron los síntomas',7],['Competición al mismo nivel o mayor que cuando empezaron los síntomas',10]];
+const VISAP_Q8_OPTS={
+  A:[['0-20 min',6],['20-40 min',12],['40-60 min',18],['60-90 min',24],['>90 min',30]],
+  B:[['0-15 min',0],['15-30 min',5],['30-45 min',10],['45-60 min',15],['>60 min',20]],
+  C:[['Nada',0],['0-10 min',2],['10-20 min',5],['20-30 min',7],['>30 min',10]]
+};
+function buildVisapQ(){
+  const wrap=document.getElementById('q-visap');
+  let html='<p class="hint" style="margin-bottom:8px">El término "dolor" se refiere a la zona específica del tendón rotuliano.</p>';
+  html+=`<div class="q-block"><div class="q-label">1. ¿Durante cuántos minutos puede estar sentado sin dolor?</div><div class="q-opts">${
+    VISAP_Q1_OPTS.map(o=>`<label class="q-opt"><input type="radio" name="visap1" value="${o[1]}" onchange="calcVisapQ()"><span>${o[0]}</span><span class="q-pts">${o[1]} pts</span></label>`).join('')
+  }</div></div>`;
+  VISAP_PAIN_ITEMS.forEach((l,i)=>{
+    const id=`visapq_${i}`;
+    html+=`<div class="q-block">
+      <div class="q-label">${l}</div>
+      <div class="q-vas-scale">
+        <span class="q-vas-anchor">Sin dolor</span>
+        <input type="range" min="0" max="10" step="1" value="5" id="${id}" data-answered="0" oninput="this.dataset.answered='1';document.getElementById('${id}_val').textContent=this.value;calcVisapQ()">
+        <span class="q-vas-anchor right">Dolor muy intenso</span>
+        <span class="q-vas-val" id="${id}_val">—</span>
+      </div>
+    </div>`;
+  });
+  html+=`<div class="q-block"><div class="q-label">7. ¿Practica algún deporte o actividad física en la actualidad?</div><div class="q-opts">${
+    VISAP_Q7_OPTS.map(o=>`<label class="q-opt"><input type="radio" name="visap7" value="${o[1]}" onchange="calcVisapQ()"><span>${o[0]}</span><span class="q-pts">${o[1]} pts</span></label>`).join('')
+  }</div></div>`;
+  html+=`<div class="q-block">
+    <div class="q-label">8. Estado actual de la lesión con el deporte</div>
+    <div class="field" style="margin:0 0 8px"><select id="visap8_escenario" onchange="toggleVisap8();calcVisapQ()">
+      <option value="">Seleccionar</option>
+      <option value="A">Sin dolor al realizar deporte</option>
+      <option value="B">Con dolor, pero no le impide completar la actividad</option>
+      <option value="C">Con dolor que le impide realizar deporte</option>
+    </select></div>
+    <div class="q-opts conditional" id="visap8_A_wrap"><div class="hint" style="margin-bottom:4px">8A. Si no tiene dolor, ¿cuánto tiempo puede estar entrenando o practicando?</div>${
+      VISAP_Q8_OPTS.A.map(o=>`<label class="q-opt"><input type="radio" name="visap8A" value="${o[1]}" onchange="calcVisapQ()"><span>${o[0]}</span><span class="q-pts">${o[1]} pts</span></label>`).join('')
+    }</div>
+    <div class="q-opts conditional" id="visap8_B_wrap"><div class="hint" style="margin-bottom:4px">8B. Si tiene cierto dolor que no obliga a interrumpir, ¿cuánto tiempo puede entrenar?</div>${
+      VISAP_Q8_OPTS.B.map(o=>`<label class="q-opt"><input type="radio" name="visap8B" value="${o[1]}" onchange="calcVisapQ()"><span>${o[0]}</span><span class="q-pts">${o[1]} pts</span></label>`).join('')
+    }</div>
+    <div class="q-opts conditional" id="visap8_C_wrap"><div class="hint" style="margin-bottom:4px">8C. Si el dolor le obliga a detener la actividad, ¿cuánto tiempo aguanta?</div>${
+      VISAP_Q8_OPTS.C.map(o=>`<label class="q-opt"><input type="radio" name="visap8C" value="${o[1]}" onchange="calcVisapQ()"><span>${o[0]}</span><span class="q-pts">${o[1]} pts</span></label>`).join('')
+    }</div>
+  </div>`;
+  wrap.innerHTML=html;
+}
+function toggleVisap8(){
+  const val=document.getElementById('visap8_escenario').value;
+  document.getElementById('visap8_A_wrap').classList.toggle('show',val==='A');
+  document.getElementById('visap8_B_wrap').classList.toggle('show',val==='B');
+  document.getElementById('visap8_C_wrap').classList.toggle('show',val==='C');
+}
+function calcVisapQ(){
+  const sel1=document.querySelector('input[name="visap1"]:checked');
+  const sel7=document.querySelector('input[name="visap7"]:checked');
+  const esc=document.getElementById('visap8_escenario').value;
+  let painComplete=true,painSum=0;
+  VISAP_PAIN_ITEMS.forEach((_,i)=>{
+    const el=document.getElementById(`visapq_${i}`);
+    if(el.dataset.answered==='1'){painSum+=10-parseInt(el.value);}
+    else{painComplete=false;}
+  });
+  const sel8=esc?document.querySelector(`input[name="visap8${esc}"]:checked`):null;
+  if(!sel1||!painComplete||!sel7||!esc||!sel8) return;
+  const total=parseInt(sel1.value)+painSum+parseInt(sel7.value)+parseInt(sel8.value);
+  document.getElementById('visap_total').value=total;
+}
+
+function toggleQ(id){
+  const el=document.getElementById(id);
+  el.classList.toggle('show');
+  if(id==='q-lysholm' && el.classList.contains('show') && !el.dataset.built){buildLysholmQ();el.dataset.built='1';}
+  if(id==='q-ikdc' && el.classList.contains('show') && !el.dataset.built){buildIkdcQ();el.dataset.built='1';}
+  if(id==='q-koos' && el.classList.contains('show') && !el.dataset.built){buildKoosQ();el.dataset.built='1';}
+  if(id==='q-oxford' && el.classList.contains('show') && !el.dataset.built){buildOxfordQ();el.dataset.built='1';}
+  if(id==='q-kujala' && el.classList.contains('show') && !el.dataset.built){buildKujalaQ();el.dataset.built='1';}
+  if(id==='q-aclqol' && el.classList.contains('show') && !el.dataset.built){buildAclqolQ();el.dataset.built='1';}
+  if(id==='q-bpii' && el.classList.contains('show') && !el.dataset.built){buildBpiiQ();el.dataset.built='1';}
+  if(id==='q-npi' && el.classList.contains('show') && !el.dataset.built){buildNpiQ();el.dataset.built='1';}
+  if(id==='q-visap' && el.classList.contains('show') && !el.dataset.built){buildVisapQ();el.dataset.built='1';}
+}
+
+// ── Toggles condicionales ──
+function toggleCond(selectId,condId,showValue){
+  const val=document.getElementById(selectId).value;
+  document.getElementById(condId).classList.toggle('show',val===showValue);
+  // ATR cuñas/conos/vástagos tienen un segundo wrap con el mismo trigger
+  const wrap2=document.getElementById(condId+'2');
+  if(wrap2) wrap2.classList.toggle('show',val===showValue);
+}
+function toggleCond2(checkbox,condId){
+  document.getElementById(condId).classList.toggle('show',checkbox.checked);
+}
+function toggleRaizTecnica(){
+  const val=document.getElementById('raiz_tecnica').value;
+  document.getElementById('raiz_anclaje_wrap').classList.toggle('show',val==='Anclaje');
+  document.getElementById('raiz_transtibial_wrap').classList.toggle('show',val==='Transtibial');
+}
+// Cada constructo del reparo radial se desglosa por técnica de paso (igual que la sutura meniscal general)
+const RADIAL_CONSTRUCTOS=[
+  {key:'horiz',label:'Puntos horizontales',value:'Puntos horizontales'},
+  {key:'crosstag',label:'Cross-tag',value:'Cross-tag'},
+  {key:'hashtag',label:'Hashtag',value:'Hashtag'},
+  {key:'x',label:'Cruzados en X',value:'Cruzados en X'}
+];
+const PASO_OPTS=[['td','Todo-dentro'],['tdpinza','Todo-dentro (pinza y anudado)'],['df','Dentro-afuera'],['fd','Fuera-adentro']];
+function buildRadialPtsPorConstructo(){
+  const wrap=document.getElementById('radial_pts_por_constructo');
+  wrap.innerHTML=RADIAL_CONSTRUCTOS.map(c=>`
+    <div class="field conditional" id="radial_pts_${c.key}_wrap">
+      <div class="pts-tec-label">Puntos por técnica de paso — ${c.label}</div>
+      <div class="grid4">
+        ${PASO_OPTS.map(([pk,pl])=>`<div class="field" style="margin:0"><label style="font-size:10.5px">${pl}</label><input type="number" min="0" id="radial_pts_${c.key}_${pk}" oninput="updateRadialPuntos()"></div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+function toggleRadialPtsField(key){
+  const map={horiz:'Puntos horizontales',crosstag:'Cross-tag',hashtag:'Hashtag',x:'Cruzados en X',
+    tt_horiz:'Horizontal transtibial',tt_x:'Cruzados/X transtibial',tt_ripstop:'Rip-stop transtibial'};
+  const name=key.startsWith('tt_')?'radial_tt_tec':'radial_constructo';
+  const checked=document.querySelector(`input[name="${name}"][value="${map[key]}"]`).checked;
+  document.getElementById('radial_pts_'+key+'_wrap').classList.toggle('show',checked);
+  if(!checked && document.getElementById('radial_pts_'+key)) document.getElementById('radial_pts_'+key).value='';
+  updateRadialPuntos();
+}
+function toggleRadialTranstibial(){
+  const checked=document.querySelector('input[name="radial_constructo"][value="Técnica transtibial"]').checked;
+  document.getElementById('radial_transtibial_wrap').classList.toggle('show',checked);
+  updateRadialPuntos();
+}
+function updateRadialPuntos(){
+  let total=0;
+  RADIAL_CONSTRUCTOS.forEach(c=>{
+    PASO_OPTS.forEach(([pk])=>{ total+=parseInt(document.getElementById(`radial_pts_${c.key}_${pk}`).value)||0; });
+  });
+  ['tt_horiz','tt_x','tt_ripstop'].forEach(k=>{ total+=parseInt(document.getElementById('radial_pts_'+k).value)||0; });
+  document.getElementById('radial_puntos_total').value=total;
+}
+buildRadialPtsPorConstructo();
+
+function toggleSuturaPtsField(key){
+  const map={todo:'Todo-dentro',todopinza:'Todo-dentro (pinza y anudado)',df:'Dentro-afuera',fd:'Fuera-adentro'};
+  const checked=document.querySelector(`input[name="sutura_tec"][value="${map[key]}"]`).checked;
+  document.getElementById('sutura_pts_'+key+'_wrap').classList.toggle('show',checked);
+  if(!checked) document.getElementById('sutura_pts_'+key).value='';
+  updateSuturaPuntos();
+}
+function updateSuturaPuntos(){
+  const total=['todo','todopinza','df','fd'].reduce((sum,k)=>
+    sum+(parseInt(document.getElementById('sutura_pts_'+k).value)||0),0);
+  document.getElementById('sutura_puntos').value=total;
+}
+function toggleMlClasificacion(){
+  const luxacion=document.getElementById('ml_luxacion').value==='Sí';
+  document.getElementById('ml_schenck_wrap').classList.toggle('show',luxacion);
+  document.getElementById('ml_mlki_wrap').classList.toggle('show',!luxacion);
+}
+function updateMlki(){
+  const checked=[...document.querySelectorAll('input[name="ml_estructuras"]:checked')].map(c=>c.value);
+  const out=document.getElementById('ml_mlki_valor');
+  if(!checked.length){out.textContent='— marca las estructuras afectadas abajo —';return;}
+  const map={LCA:'A',LCP:'P',PMC:'M',PLC:'L'};
+  const numCruciados=(checked.includes('LCA')?1:0)+(checked.includes('LCP')?1:0);
+  const letras=['LCA','LCP','PMC','PLC'].filter(k=>checked.includes(k)).map(k=>map[k]).join('');
+  out.textContent = numCruciados>0 ? `MLKI ${numCruciados}-${letras}` : `MLKI —${letras} (sin lesión de cruzado)`;
+}
+function togglePfDerot(){
+  const on=document.getElementById('pf_derot').value==='Sí';
+  document.getElementById('pf_derot_wrap').classList.toggle('show',on);
+  const sitio=document.getElementById('pf_derot_sitio').value;
+  document.getElementById('pf_derot_femoral_wrap').classList.toggle('show',on&&(sitio==='Femoral'||sitio==='Ambas'));
+  document.getElementById('pf_derot_tibial_wrap').classList.toggle('show',on&&(sitio==='Tibial'||sitio==='Ambas'));
+}
+function toggleGraftDiam(){
+  const val=document.getElementById('injerto').value;
+  const tejidoBlando=['Isquiotibiales','Peroneo largo','Cuádriceps','Recto femoral'].includes(val);
+  document.getElementById('injerto_fasciculos_wrap').classList.toggle('show',tejidoBlando);
+}
+function toggleOsteotomiaNiveles(){
+  const val=document.getElementById('ost_niveles').value;
+  document.getElementById('ost_unico_wrap').classList.toggle('show',val==='unico');
+  document.getElementById('ost_doble_wrap').classList.toggle('show',val==='doble');
+}
+
+// ── Módulos ──
+const MODULES=['lca','meniscal','atr','osteotomia','multiligamentaria','patelofemoral','mecext'];
+const MODULE_SCALES={
+  lca:{lysholm:'req',ikdc:'opt',aclqol:'opt'},
+  meniscal:{lysholm:'req',ikdc:'opt'},
+  atr:{oxford:'req',koos:'opt',kss:'opt'},
+  osteotomia:{koos:'req',lysholm:'opt'},
+  multiligamentaria:{lysholm:'req',ikdc:'opt'},
+  patelofemoral:{kujala:'req',bpii:'req',npi:'opt'},
+  mecext:{lysholm:'req',ikdc:'opt',visap:'opt'}
+};
+function setModule(mod){
+  MODULES.forEach(m=>{
+    document.getElementById('panel-'+m).classList.toggle('active',mod===m);
+    document.getElementById('btn-mod-'+m).classList.toggle('active',mod===m);
+    document.getElementById('complicaciones-'+m).style.display=(mod===m)?'flex':'none';
+  });
+  window._currentModule=mod;
+
+  // Escalas: mostrar solo las del módulo activo, con badge obligatorio/opcional
+  const cfg=MODULE_SCALES[mod];
+  document.querySelectorAll('.scale-box').forEach(box=>{
+    const key=box.dataset.scale;
+    if(cfg && cfg[key]){
+      box.classList.add('show');
+      const badge=document.getElementById('badge-'+key);
+      badge.textContent=cfg[key]==='req'?'Obligatorio':'Opcional';
+      badge.classList.toggle('required',cfg[key]==='req');
+    } else {
+      box.classList.remove('show');
+    }
+  });
+
+  // VISA-P solo aplica a tendón rotuliano dentro de Mecanismo extensor
+  if(mod==='mecext') updateVisaPVisibility();
+
+  // Pestaña "Control 3-6 meses" solo visible en Osteotomías y Mecanismo extensor
+  document.querySelectorAll('[data-special-visit]').forEach(el=>{
+    el.style.display = (mod==='osteotomia'||mod==='mecext') ? 'inline-block' : 'none';
+  });
+  // Si al cambiar de módulo la visita activa ya no tiene sentido (ej. estaba en "Control 3-6 meses"
+  // y se cambia a un módulo que no la usa), volvemos a Basal.
+  if(mod!=='osteotomia' && mod!=='mecext' && window._currentVisit==='Control 3-6 meses'){
+    document.querySelector('.visit-tab').click();
+  } else {
+    updateVisitVisibility();
+  }
+}
+window._currentModule='lca';
+
+document.getElementById('mecanismo').addEventListener('change',e=>{
+  document.getElementById('deporte_wrap').style.display = e.target.value==='Trauma deportivo' ? 'block' : 'none';
+});
+
+// ── IMC automático ──
+function calcIMC(){
+  const peso=parseFloat(document.getElementById('peso').value);
+  const talla=parseFloat(document.getElementById('talla').value);
+  const imcField=document.getElementById('imc');
+  if(!peso || !talla){ imcField.value=''; return; }
+  const tallaM=talla/100;
+  const imc=peso/(tallaM*tallaM);
+  imcField.value=imc.toFixed(1);
+}
+document.getElementById('peso').addEventListener('input',calcIMC);
+document.getElementById('talla').addEventListener('input',calcIMC);
+document.getElementById('fecha_registro').addEventListener('change',()=>suggestFechaVisita(window._currentVisit));
+
+// ── Visitas ──
+window._currentVisit='Basal';
+function setVisit(v,btn){
+  window._currentVisit=v;
+  document.querySelectorAll('.visit-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  updateVisitVisibility();
+  suggestFechaVisita(v);
+}
+// Sugiere la fecha de la visita a partir de la fecha de registro (basal), sumando los meses
+// del corte correspondiente — el evaluador puede ajustarla si el control se hizo otro día.
+function suggestFechaVisita(v){
+  const base=val('fecha_registro');
+  const campo=document.getElementById('fecha_visita');
+  if(!base){campo.value='';return;}
+  const meses={'Basal':0,'Control 3-6 meses':4.5,'6 meses':6,'12 meses':12,'24 meses':24}[v]??0;
+  const d=new Date(base+'T00:00:00');
+  d.setDate(d.getDate()+Math.round(meses*30.44));
+  campo.value=d.toISOString().slice(0,10);
+}
+function updateVisitVisibility(){
+  const v=window._currentVisit;
+  const mod=window._currentModule;
+  const esBasal = v==='Basal';
+  // Complicaciones: nunca en Basal (las intraoperatorias ya viven en la técnica quirúrgica)
+  document.getElementById('complicaciones-wrap').style.display = esBasal ? 'none' : 'block';
+  document.getElementById('basal-hint').style.display = esBasal ? 'block' : 'none';
+  // Bloque de consolidación/HKA postop: solo en Osteotomías, solo en "Control 3-6 meses", una sola vez
+  document.getElementById('osteo_seguimiento_wrap').classList.toggle('show', mod==='osteotomia' && v==='Control 3-6 meses');
+  // Bloque de altura patelar postop: solo en Mecanismo extensor, solo en "Control 3-6 meses", una sola vez
+  document.getElementById('mx_seguimiento_wrap').classList.toggle('show', mod==='mecext' && v==='Control 3-6 meses');
+}
+
+function toggleMxEstructura(){
+  const val=document.getElementById('mx_estructura').value;
+  document.getElementById('mx_localiz_rotuliano_wrap').classList.toggle('show',val==='Tendón rotuliano');
+  document.getElementById('mx_localiz_cuadricipital_wrap').classList.toggle('show',val==='Tendón cuadricipital');
+  updateVisaPVisibility();
+}
+function updateVisaPVisibility(){
+  const box=document.getElementById('scalebox-visap');
+  const val=document.getElementById('mx_estructura').value;
+  if(val!=='Tendón rotuliano') box.classList.remove('show');
+  else if(window._currentModule==='mecext') box.classList.add('show');
+}
+function toggleMxTecnica(){
+  const val=document.getElementById('mx_tecnica').value;
+  document.getElementById('mx_injerto_wrap').classList.toggle('show',val==='Reparo + aumentación'||val==='Reconstrucción');
+}
+function toggleMxFijacion(){
+  const val=document.getElementById('mx_fijacion').value;
+  document.getElementById('mx_tuneles_wrap').classList.toggle('show',val==='Túneles óseos'||val==='Híbrida (túneles + anclajes)');
+  document.getElementById('mx_anclajes_wrap').classList.toggle('show',val==='Suturas de anclaje'||val==='Híbrida (túneles + anclajes)');
+}
+
+function getLateralidad(mod){
+  const map={lca:'lca_lateralidad',meniscal:'men_lateralidad',atr:'atr_lateralidad',osteotomia:'ost_lateralidad',multiligamentaria:'ml_lateralidad',patelofemoral:'pf_lateralidad',mecext:'mx_lateralidad'};
+  const el=document.getElementById(map[mod]);
+  return el ? (el.value||'—') : '—';
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// CONEXIÓN SUPABASE
+// ══════════════════════════════════════════════════════════════════════════
+const SUPABASE_URL='https://pssyfcrwipcwdngmlsqq.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_cv1Q_h-rg4EKK26H7_XxNQ_xCW-ZTlX';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+async function sha256Hex(text){
+  if(!text||!text.trim()) return null;
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text.trim()));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function checkSession(){
+  const {data:{session}}=await sb.auth.getSession();
+  document.getElementById('auth-gate').style.display=session?'none':'flex';
+  document.getElementById('app-root').style.display=session?'block':'none';
+  if(session) document.getElementById('user-email').textContent=session.user.email;
+}
+
+// ── Recuperar / restablecer contraseña ──
+// redirectTo usa la URL actual (sin el fragmento #) en vez de depender de la "Site URL" fija
+// configurada en Supabase — así funciona sin importar dónde esté publicado el formulario
+// (Claude Artifact, despliegue/index.html, etc.), sin volver a caer en el problema de localhost:3000.
+async function sendPasswordReset(){
+  const email=document.getElementById('login-email').value.trim();
+  const errEl=document.getElementById('reset-feedback');
+  const btn=document.getElementById('reset-link-btn');
+  errEl.style.color='';
+  errEl.textContent='';
+  if(!email){errEl.style.color='#c0392b';errEl.textContent='Escribe tu correo arriba primero, en el campo "Correo"';return;}
+  btn.disabled=true;
+  errEl.style.color='';
+  errEl.textContent='Enviando correo de recuperación...';
+  const redirectTo=window.location.href.split('#')[0];
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo});
+  btn.disabled=false;
+  if(error){errEl.style.color='#c0392b';errEl.textContent='Error: '+error.message;return;}
+  errEl.style.color='#0b8a72';
+  errEl.textContent='✓ Revisa tu correo ('+email+') — te enviamos un link para restablecer la contraseña.';
+}
+async function submitNewPassword(){
+  const p1=document.getElementById('recovery-password').value;
+  const p2=document.getElementById('recovery-password2').value;
+  const errEl=document.getElementById('recovery-error');
+  errEl.style.color='';
+  errEl.textContent='';
+  if(!p1||p1.length<6){errEl.textContent='Mínimo 6 caracteres';return;}
+  if(p1!==p2){errEl.textContent='Las contraseñas no coinciden';return;}
+  const {error}=await sb.auth.updateUser({password:p1});
+  if(error){errEl.textContent=error.message;return;}
+  errEl.style.color='#0b8a72';
+  errEl.textContent='Contraseña actualizada ✓';
+  history.replaceState(null,'',window.location.pathname);
+  setTimeout(()=>{
+    document.getElementById('recovery-card').style.display='none';
+    document.getElementById('login-card').style.display='block';
+    checkSession();
+  },1400);
+}
+// Supabase dispara este evento cuando detecta un link de recuperación (#access_token=...&type=recovery)
+// en la URL al cargar la página — así reemplazamos el login normal por el formulario de nueva contraseña.
+sb.auth.onAuthStateChange((event)=>{
+  if(event==='PASSWORD_RECOVERY'){
+    document.getElementById('auth-gate').style.display='flex';
+    document.getElementById('app-root').style.display='none';
+    document.getElementById('login-card').style.display='none';
+    document.getElementById('recovery-card').style.display='block';
+  }
+});
+async function login(){
+  const email=document.getElementById('login-email').value.trim();
+  const password=document.getElementById('login-password').value;
+  const errEl=document.getElementById('login-error');
+  errEl.textContent='';
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  if(error){errEl.textContent=error.message;return;}
+  checkSession();
+}
+async function logout(){await sb.auth.signOut();checkSession();}
+checkSession();
+
+async function resolveInstitucionId(nombre){
+  if(!nombre) return null;
+  const {data,error}=await sb.from('instituciones').select('id').eq('nombre',nombre).maybeSingle();
+  if(error){console.error(error);return null;}
+  return data?data.id:null;
+}
+
+// ── Helpers de lectura del formulario ──
+function val(id){const el=document.getElementById(id);return el?(el.value||null):null;}
+function checked(name){return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(c=>c.value);}
+function numOrNull(id){const v=val(id);return v===null||v===''?null:parseFloat(v);}
+function boolFromSiNo(id){const v=val(id);return v==='Sí'?true:v==='No'?false:null;}
+
+async function collectPacienteCore(){
+  const mod=window._currentModule;
+  const lat=getLateralidad(mod);
+  return {
+    codigo_estudio: val('codigo_estudio'),
+    institucion_id: await resolveInstitucionId(val('institucion')),
+    cedula_hash: await sha256Hex(val('cedula')),
+    fecha_registro: val('fecha_registro')||undefined,
+    edad: numOrNull('edad'),
+    sexo: val('sexo'),
+    peso: numOrNull('peso'),
+    talla: numOrNull('talla'),
+    mecanismo_lesion: val('mecanismo'),
+    deporte: val('deporte'),
+    comorbilidades: checked('comorb'),
+    rodilla_operada: lat==='—'?null:lat,
+    tipo_cirugia: mod
+  };
+}
+
+function collectModMeniscal(){
+  return {
+    menisco_afectado: val('men_afectado'),
+    localizacion: checked('men_loc'),
+    patron_rotura: val('men_patron'),
+    zona_vascular: val('men_zona'),
+    estabilidad: val('men_estabilidad'),
+    longitud_mm: numOrNull('men_longitud'),
+    tecnica_quirurgica: checked('men_tecnica'),
+    pct_resecado: val('men_pct_resecado'),
+    tecnica_sutura: checked('sutura_tec'),
+    sutura_puntos_detalle: {
+      todo:numOrNull('sutura_pts_todo'), todopinza:numOrNull('sutura_pts_todopinza'),
+      df:numOrNull('sutura_pts_df'), fd:numOrNull('sutura_pts_fd')
+    },
+    num_puntos_sutura: numOrNull('sutura_puntos'),
+    raiz_tecnica: val('raiz_tecnica'),
+    raiz_num_anclas: numOrNull('raiz_num_anclas'),
+    raiz_num_tuneles: numOrNull('raiz_num_tuneles'),
+    raiz_num_suturas: numOrNull('raiz_num_suturas'),
+    raiz_fijacion_distal: val('raiz_fijacion_distal'),
+    radial_constructo: checked('radial_constructo'),
+    radial_puntos_detalle: {
+      horiz:{td:numOrNull('radial_pts_horiz_td'),tdpinza:numOrNull('radial_pts_horiz_tdpinza'),df:numOrNull('radial_pts_horiz_df'),fd:numOrNull('radial_pts_horiz_fd')},
+      crosstag:{td:numOrNull('radial_pts_crosstag_td'),tdpinza:numOrNull('radial_pts_crosstag_tdpinza'),df:numOrNull('radial_pts_crosstag_df'),fd:numOrNull('radial_pts_crosstag_fd')},
+      hashtag:{td:numOrNull('radial_pts_hashtag_td'),tdpinza:numOrNull('radial_pts_hashtag_tdpinza'),df:numOrNull('radial_pts_hashtag_df'),fd:numOrNull('radial_pts_hashtag_fd')},
+      x:{td:numOrNull('radial_pts_x_td'),tdpinza:numOrNull('radial_pts_x_tdpinza'),df:numOrNull('radial_pts_x_df'),fd:numOrNull('radial_pts_x_fd')},
+      transtibial:{horiz:numOrNull('radial_pts_tt_horiz'),x:numOrNull('radial_pts_tt_x'),ripstop:numOrNull('radial_pts_tt_ripstop')}
+    },
+    radial_puntos_total: numOrNull('radial_puntos_total'),
+    radial_transtibial_subtecnica: checked('radial_tt_tec'),
+    radial_tt_fijacion_distal: val('radial_tt_fijacion_distal'),
+    refuerzo_biologico: boolFromSiNo('refuerzo_bio'),
+    refuerzo_bio_tipo: checked('bio_tipo'),
+    tiempo_qx_min: numOrNull('men_tiempo_qx')
+  };
+}
+
+function collectVisita(){
+  const mod=window._currentModule;
+  const compl=[...document.querySelectorAll('#complicaciones-'+mod+' input[name="compl"]:checked')].map(c=>c.value);
+  return {
+    tipo_visita: window._currentVisit,
+    fecha_visita: val('fecha_visita')||undefined,
+    complicaciones: compl,
+    lca_estab_instrumento: val('lca_estab_instrumento'),
+    lca_estab_mm: numOrNull('lca_estab_mm'),
+    ost_consolidacion: val('ost_consolidacion'),
+    ost_hka_post: numOrNull('ost_hka_post'),
+    ost_wbl_post: numOrNull('ost_wbl_post'),
+    mx_caton_post: numOrNull('mx_caton_post'),
+    lysholm_total: numOrNull('lysholm_total'),
+    tegner_actual: numOrNull('tegner_actual'),
+    tegner_previo: numOrNull('tegner_previo'),
+    ikdc_incluido: document.getElementById('ikdc_incluir')?.checked||false,
+    ikdc_total: numOrNull('ikdc_total'),
+    aclqol_incluido: document.getElementById('aclqol_incluir')?.checked||false,
+    aclqol_sintomas: numOrNull('aclqol_sintomas'), aclqol_trabajo: numOrNull('aclqol_trabajo'),
+    aclqol_deporte: numOrNull('aclqol_deporte'), aclqol_estilo: numOrNull('aclqol_estilo'),
+    aclqol_social: numOrNull('aclqol_social'), aclqol_total: numOrNull('aclqol_total'),
+    oxford_total: numOrNull('oxford_total'),
+    koos_dolor: numOrNull('koos_dolor'), koos_sintomas: numOrNull('koos_sintomas'),
+    koos_avd: numOrNull('koos_avd'), koos_deporte: numOrNull('koos_deporte'), koos_qol: numOrNull('koos_qol'),
+    kss_objetiva: numOrNull('kss_objetiva'), kss_satisfaccion: numOrNull('kss_satisfaccion'),
+    kss_expectativas: numOrNull('kss_expectativas'), kss_funcional: numOrNull('kss_funcional'),
+    kujala_total: numOrNull('kujala_total'),
+    bpii_sintomas: numOrNull('bpii_sintomas'), bpii_trabajo: numOrNull('bpii_trabajo'),
+    bpii_deporte: numOrNull('bpii_deporte'), bpii_estilo: numOrNull('bpii_estilo'),
+    bpii_social: numOrNull('bpii_social'), bpii_total: numOrNull('bpii_total'),
+    npi_total: numOrNull('npi_total'),
+    visap_total: numOrNull('visap_total')
+  };
+}
+
+// Mapea las etiquetas del select (más legibles en el formulario) a los valores exactos
+// que acepta el check constraint de mod_atr.tipo_implante en schema.sql (CR/PS/Pivote medial).
+// "Otra" no está en el constraint todavía — se guarda como null hasta que se amplíe en la BD.
+function mapTipoImplanteATR(v){
+  if(v==='Cruciate-retaining (CR)') return 'CR';
+  if(v==='Posterior-stabilized (PS)') return 'PS';
+  if(v==='Pivote medial') return 'Pivote medial';
+  return null;
+}
+function collectModATR(){
+  return {
+    cirugia_previa: boolFromSiNo('atr_cx_previa'),
+    cirugia_previa_detalle: val('atr_cx_previa_detalle'),
+    infiltracion_previa: boolFromSiNo('atr_infilt_previa'),
+    infiltracion_sustancia: val('atr_infilt_sustancia'),
+    deformidad_direccion: val('atr_deformidad_dir'),
+    deformidad_grados: numOrNull('atr_deformidad_grados'),
+    marca_protesis: val('atr_marca'),
+    tipo_implante: mapTipoImplanteATR(val('atr_tipo')),
+    fijacion: val('atr_fijacion'),
+    polietileno: val('atr_polietileno'),
+    talla_femoral: val('atr_talla_femoral'),
+    talla_tibial: val('atr_talla_tibial'),
+    talla_inserto: val('atr_talla_inserto'),
+    boton_patelar: boolFromSiNo('atr_boton_patelar'),
+    boton_patelar_talla: val('atr_boton_patelar_talla'),
+    cunas: boolFromSiNo('atr_cunas'),
+    cunas_ubicacion: val('atr_cunas_ubic'),
+    cunas_talla: val('atr_cunas_talla'),
+    conos: boolFromSiNo('atr_conos'),
+    conos_ubicacion: val('atr_conos_ubic'),
+    conos_talla: val('atr_conos_talla'),
+    vastagos: boolFromSiNo('atr_vastagos'),
+    vastagos_ubicacion: val('atr_vastagos_ubic'),
+    vastagos_talla: val('atr_vastagos_talla'),
+    abordaje: val('atr_abordaje'),
+    alineacion: val('atr_alineacion'),
+    asistencia_robotica: boolFromSiNo('atr_robotica'),
+    robotica_tipo: val('atr_robotica_tipo'),
+    tiempo_qx_min: numOrNull('atr_tiempo_qx')
+  };
+}
+
+// Registro de módulos ya conectados a Supabase — agregar aquí cada vez que se escriba
+// un collectMod*() nuevo para otro módulo (LCA, Osteotomía, etc.).
+const MOD_COLLECTORS={meniscal:collectModMeniscal, atr:collectModATR};
+const MOD_TABLES={meniscal:'mod_meniscal', atr:'mod_atr'};
+
+async function guardarVisita(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){showToast('Debes iniciar sesión');return;}
+  const codigo=val('codigo_estudio');
+  if(!codigo){showToast('Falta el código de estudio');return;}
+  const mod=window._currentModule;
+  const collector=MOD_COLLECTORS[mod];
+  if(!collector){
+    showToast('Este módulo aún no está conectado a Supabase — por ahora: Meniscal, ATR.');
+    return;
+  }
+  try{
+    const core=await collectPacienteCore();
+    const {data:paciente,error:errP}=await sb.from('pacientes')
+      .upsert(core,{onConflict:'codigo_estudio'})
+      .select('id').single();
+    if(errP) throw errP;
+    const pacienteId=paciente.id;
+
+    const {error:errM}=await sb.from(MOD_TABLES[mod])
+      .upsert({paciente_id:pacienteId, ...collector()},{onConflict:'paciente_id'});
+    if(errM) throw errM;
+
+    const {error:errV}=await sb.from('visitas')
+      .upsert({paciente_id:pacienteId, ...collectVisita()},{onConflict:'paciente_id,tipo_visita'});
+    if(errV) throw errV;
+
+    showToast('Guardado en Supabase ✓ ('+window._currentVisit+')');
+    await consultarGuardado();
+  }catch(e){
+    console.error(e);
+    showToast('Error al guardar: '+(e.message||JSON.stringify(e)));
+  }
+}
+
+// Confirmación real: lee de vuelta lo que quedó guardado en Supabase para este código de estudio,
+// en vez de confiar en una copia local que puede quedar desincronizada (como pasó antes).
+async function consultarGuardado(){
+  const body=document.getElementById('tabla-visitas-body');
+  const codigo=val('codigo_estudio');
+  if(!codigo){showToast('Escribe el código de estudio primero');return;}
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){showToast('Debes iniciar sesión');return;}
+  try{
+    const {data:paciente,error:errP}=await sb.from('pacientes')
+      .select('id').eq('codigo_estudio',codigo).maybeSingle();
+    if(errP) throw errP;
+    if(!paciente){
+      body.innerHTML='<tr><td colspan="4" style="color:var(--t3)">No hay ningún paciente guardado con ese código todavía.</td></tr>';
+      return;
+    }
+    const {data:filas,error:errV}=await sb.from('visitas')
+      .select('tipo_visita,complicaciones,lysholm_total,creado_en')
+      .eq('paciente_id',paciente.id).order('tipo_visita');
+    if(errV) throw errV;
+    if(!filas||!filas.length){
+      body.innerHTML='<tr><td colspan="4" style="color:var(--t3)">El paciente existe pero aún no tiene visitas guardadas.</td></tr>';
+      return;
+    }
+    body.innerHTML=filas.map(v=>`<tr>
+      <td>${v.tipo_visita}</td>
+      <td>${(v.complicaciones&&v.complicaciones.length)?v.complicaciones.join(', '):'Ninguna'}</td>
+      <td>${v.lysholm_total??'—'}</td>
+      <td>${v.creado_en?new Date(v.creado_en).toLocaleString('es-CO'):'—'}</td>
+    </tr>`).join('');
+  }catch(e){
+    console.error(e);
+    body.innerHTML='<tr><td colspan="4" style="color:#c0392b">Error consultando Supabase: '+(e.message||JSON.stringify(e))+'</td></tr>';
+  }
+}
+
+
+function exportarJSON(){
+  showToast('El export a JSON quedó pendiente de reconectar contra Supabase — por ahora usa la tabla de arriba o el editor de tablas de Supabase.');
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// Estado inicial
+setModule('lca');
+</script>
+</body>
+</html>
