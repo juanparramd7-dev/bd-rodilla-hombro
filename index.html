@@ -318,24 +318,31 @@ table.visits td{padding:6px 8px;border-bottom:0.5px solid var(--border)}
         </div>
       </div>
       <div class="field">
-        <label>Gesto asociado</label>
+        <label>Gesto asociado (al marcar un reparo se despliegan sus detalles)</label>
         <div class="check-grid">
-          <label class="chk"><input type="checkbox" name="gesto" value="Sutura meniscal medial">Sutura meniscal medial</label>
-          <label class="chk"><input type="checkbox" name="gesto" value="Sutura meniscal lateral">Sutura meniscal lateral</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="Reparo meniscal medial" data-block="lca_blk_rep_med">Reparo meniscal medial</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="Reparo meniscal lateral" data-block="lca_blk_rep_lat">Reparo meniscal lateral</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="Reparo radial medial" data-block="lca_blk_rad_med">Reparo radial medial</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="Reparo radial lateral" data-block="lca_blk_rad_lat">Reparo radial lateral</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="Reparo de raíz medial" data-block="lca_blk_raiz_med">Reparo de raíz medial</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="Reparo de raíz lateral" data-block="lca_blk_raiz_lat">Reparo de raíz lateral</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="Reparo de lesión en rampa" data-block="lca_blk_rampa">Reparo de lesión en rampa</label>
           <label class="chk"><input type="checkbox" name="gesto" value="Meniscectomía medial">Meniscectomía medial</label>
           <label class="chk"><input type="checkbox" name="gesto" value="Meniscectomía lateral">Meniscectomía lateral</label>
           <label class="chk"><input type="checkbox" name="gesto" value="Condroplastia">Condroplastia</label>
-          <label class="chk"><input type="checkbox" name="gesto" value="OATS">OATS</label>
+          <label class="chk"><input type="checkbox" name="gesto" value="OATS" data-block="lca_blk_oats">OATS</label>
           <label class="chk"><input type="checkbox" name="gesto" value="Ninguno">Ninguno</label>
         </div>
       </div>
+      <div id="lca_gesto_blocks"></div>
       <div class="field">
         <label>Refuerzo anterolateral</label>
         <select id="refuerzo_al" onchange="toggleCond('refuerzo_al','refuerzo_al_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
       </div>
-      <div class="grid2 conditional" id="refuerzo_al_wrap">
+      <div class="grid3 conditional" id="refuerzo_al_wrap">
         <div class="field"><label>Tipo</label><select id="refuerzo_al_tipo"><option value="">Seleccionar</option><option>Tenodesis tipo Lemaire</option><option>Reconstrucción de ligamento anterolateral</option></select></div>
         <div class="field"><label>Fijación</label><select id="refuerzo_al_fijacion"><option value="">Seleccionar</option><option>Ancla</option><option>Tornillo</option><option>Grapa</option></select></div>
+        <div class="field"><label>Ángulo de flexión en la fijación</label><select id="refuerzo_al_angulo"><option value="">Seleccionar</option><option value="0">0°</option><option value="30">30°</option><option value="60">60°</option><option value="90">90°</option></select></div>
       </div>
 
       <div class="subsec">Estabilidad objetiva (instrumentada)</div>
@@ -2212,10 +2219,189 @@ function collectModATR(){
   };
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// LCA — reparos meniscales, raíz, radial y rampa dentro de "gesto asociado"
+// Los valores de técnica coinciden con los del módulo Meniscal para poder
+// analizar ambos módulos juntos.
+// ══════════════════════════════════════════════════════════════════════════
+const LCA_PASO=[['td','Todo-dentro','Todo-dentro (dispositivo)'],['tdpinza','Todo-dentro (pinza y anudado)','Todo-dentro (pinza y anudado)'],['df','Dentro-afuera','Dentro-afuera'],['fd','Fuera-adentro','Fuera-adentro']];
+const LCA_RAD_CONSTR=[['horiz','Puntos horizontales'],['crosstag','Cross-tag'],['hashtag','Hashtag'],['x','Cruzados en X']];
+const LCA_RAD_TT=[['tt_horiz','Horizontal transtibial','Puntos horizontales'],['tt_x','Cruzados/X transtibial','Puntos cruzados / en X'],['tt_ripstop','Rip-stop transtibial','Rip-stop (cross-tag o hashtag)']];
+const LCA_FIJ_DISTAL=['Botón','Knotless','Tornillo y arandela','Anudado con puente óseo'];
+const LCA_RAMPA_TEC=[['hook','Sutura con gancho (portal posteromedial)'],['td','Todo-dentro (portal anteromedial)']];
+const LCA_SIDES=[['med','medial'],['lat','lateral']];
+
+function lcaSelFijDistal(id){
+  return `<select id="${id}"><option value="">Seleccionar</option>${LCA_FIJ_DISTAL.map(o=>`<option>${o}</option>`).join('')}</select>`;
+}
+function lcaBlkReparo(s,l){
+  const p=`lca_rep_${s}`;
+  return `<div class="conditional" id="lca_blk_rep_${s}">
+    <div class="pts-tec-label">Reparo meniscal ${l} — técnica(s) usada(s) (puede marcar varias)</div>
+    <div class="check-grid">${LCA_PASO.map(([k,v,lab])=>`<label class="chk"><input type="checkbox" name="${p}_tec" value="${v}" data-pts="${p}_${k}_wrap">${lab}</label>`).join('')}</div>
+    <div class="grid4">${LCA_PASO.map(([k,v,lab])=>`<div class="field conditional" id="${p}_${k}_wrap"><label>Puntos — ${lab}</label><input type="number" min="0" id="${p}_${k}" class="lca-pts" data-total="${p}_total"></div>`).join('')}</div>
+    <div class="field"><label>Número total de puntos — reparo meniscal ${l}</label><input type="number" min="0" id="${p}_total"></div>
+  </div>`;
+}
+function lcaBlkRadial(s,l){
+  const p=`lca_rad_${s}`;
+  const constr=LCA_RAD_CONSTR.map(([k,lab])=>`<label class="chk"><input type="checkbox" name="${p}_constructo" value="${lab}" data-pts="${p}_${k}_wrap">${lab}</label>`).join('')
+    +`<label class="chk"><input type="checkbox" name="${p}_constructo" value="Técnica transtibial" data-pts="${p}_tt_wrap">Técnica transtibial</label>`;
+  const porConstr=LCA_RAD_CONSTR.map(([k,lab])=>`<div class="field conditional" id="${p}_${k}_wrap"><div class="pts-tec-label">Puntos por técnica de paso — ${lab}</div><div class="grid4">${
+    LCA_PASO.map(([pk,pv,pl])=>`<div class="field" style="margin:0"><label style="font-size:10.5px">${pl}</label><input type="number" min="0" id="${p}_${k}_${pk}" class="lca-pts" data-total="${p}_total"></div>`).join('')
+  }</div></div>`).join('');
+  const tt=`<div class="conditional" id="${p}_tt_wrap">
+    <div class="field"><label>Sub-técnica transtibial (puede marcar varias)</label><div class="check-grid">${
+      LCA_RAD_TT.map(([k,v,lab])=>`<label class="chk"><input type="checkbox" name="${p}_tt_tec" value="${v}" data-pts="${p}_${k}_wrap">${lab}</label>`).join('')
+    }</div></div>
+    <div class="grid3">${LCA_RAD_TT.map(([k,v,lab])=>`<div class="field conditional" id="${p}_${k}_wrap"><label>Puntos — ${lab}</label><input type="number" min="0" id="${p}_${k}" class="lca-pts" data-total="${p}_total"></div>`).join('')}</div>
+    <div class="field"><label>Fijación distal</label>${lcaSelFijDistal(p+'_tt_fijacion_distal')}</div>
+  </div>`;
+  return `<div class="conditional" id="lca_blk_rad_${s}">
+    <div class="pts-tec-label">Reparo radial ${l} — constructo (puede marcar varios, reparaciones híbridas)</div>
+    <div class="check-grid">${constr}</div>
+    ${porConstr}${tt}
+    <div class="field"><label>Número total de puntos — reparo radial ${l}</label><input type="number" min="0" id="${p}_total"></div>
+  </div>`;
+}
+function lcaBlkRaiz(s,l){
+  const p=`lca_raiz_${s}`;
+  return `<div class="conditional" id="lca_blk_raiz_${s}">
+    <div class="pts-tec-label">Reparo de raíz meniscal ${l}</div>
+    <div class="field"><label>Técnica</label>
+      <select id="${p}_tecnica" data-raiz="${p}"><option value="">Seleccionar</option><option value="Transtibial">Transtibial (pull-out)</option><option value="Anclaje">Sutura de anclaje</option></select>
+    </div>
+    <div class="field conditional" id="${p}_anclaje_wrap"><label>Número de anclas</label><input type="number" min="0" id="${p}_num_anclas"></div>
+    <div class="grid3 conditional" id="${p}_tt_wrap">
+      <div class="field"><label>Número de túneles</label><input type="number" min="0" id="${p}_num_tuneles"></div>
+      <div class="field"><label>Número de suturas</label><input type="number" min="0" id="${p}_num_suturas"></div>
+      <div class="field"><label>Fijación distal</label>${lcaSelFijDistal(p+'_fijacion_distal')}</div>
+    </div>
+  </div>`;
+}
+function lcaBlkRampa(){
+  const p='lca_rampa';
+  return `<div class="conditional" id="lca_blk_rampa">
+    <div class="pts-tec-label">Reparo de lesión en rampa (menisco medial, unión meniscocapsular) — técnica(s) usada(s) (puede marcar varias)</div>
+    <div class="check-grid">${LCA_RAMPA_TEC.map(([k,v])=>`<label class="chk"><input type="checkbox" name="${p}_tec" value="${v}" data-pts="${p}_${k}_wrap">${v}</label>`).join('')}</div>
+    <div class="grid2">${LCA_RAMPA_TEC.map(([k,v])=>`<div class="field conditional" id="${p}_${k}_wrap"><label>Puntos — ${v}</label><input type="number" min="0" id="${p}_${k}" class="lca-pts" data-total="${p}_total"></div>`).join('')}</div>
+    <div class="field"><label>Número total de puntos — rampa</label><input type="number" min="0" id="${p}_total"></div>
+  </div>`;
+}
+function lcaBlkOats(){
+  return `<div class="conditional" id="lca_blk_oats">
+    <div class="pts-tec-label">OATS (trasplante osteocondral autólogo)</div>
+    <div class="field" style="max-width:220px"><label>Diámetro (mm)</label><input type="number" step="0.5" min="0" id="lca_oats_diametro"></div>
+  </div>`;
+}
+function buildLcaBlocks(){
+  document.getElementById('lca_gesto_blocks').innerHTML=
+    LCA_SIDES.map(([s,l])=>lcaBlkReparo(s,l)).join('')
+    +LCA_SIDES.map(([s,l])=>lcaBlkRadial(s,l)).join('')
+    +LCA_SIDES.map(([s,l])=>lcaBlkRaiz(s,l)).join('')
+    +lcaBlkRampa()
+    +lcaBlkOats();
+}
+function lcaRecalc(totalId){
+  const inputs=[...document.querySelectorAll(`.lca-pts[data-total="${totalId}"]`)];
+  const hayValor=inputs.some(i=>i.value!=='');
+  document.getElementById(totalId).value=hayValor?inputs.reduce((a,i)=>a+(parseInt(i.value)||0),0):'';
+}
+function initLcaBlocks(){
+  buildLcaBlocks();
+  const panel=document.getElementById('panel-lca');
+  panel.addEventListener('change',e=>{
+    const t=e.target;
+    if(t.dataset.block){ document.getElementById(t.dataset.block).classList.toggle('show',t.checked); }
+    if(t.dataset.pts){
+      const w=document.getElementById(t.dataset.pts);
+      w.classList.toggle('show',t.checked);
+      if(!t.checked){
+        const totales=new Set([...w.querySelectorAll('input.lca-pts')].map(i=>i.dataset.total));
+        w.querySelectorAll('input[type="checkbox"]').forEach(c=>{c.checked=false;});
+        w.querySelectorAll('.conditional').forEach(c=>c.classList.remove('show'));
+        w.querySelectorAll('input.lca-pts').forEach(i=>{i.value='';});
+        totales.forEach(tid=>lcaRecalc(tid));
+      }
+    }
+    if(t.dataset.raiz){
+      const p=t.dataset.raiz;
+      document.getElementById(p+'_anclaje_wrap').classList.toggle('show',t.value==='Anclaje');
+      document.getElementById(p+'_tt_wrap').classList.toggle('show',t.value==='Transtibial');
+    }
+  });
+  panel.addEventListener('input',e=>{
+    if(e.target.classList&&e.target.classList.contains('lca-pts')) lcaRecalc(e.target.dataset.total);
+  });
+}
+initLcaBlocks();
+
+// Solo se guarda el detalle de un reparo si su casilla de "gesto asociado" está marcada.
+function lcaGestoOn(v){ return checked('gesto').includes(v); }
+function lcaPts(prefix,keys){ const o={}; keys.forEach(k=>{o[k]=numOrNull(`${prefix}_${k}`);}); return o; }
+function collectLcaReparo(s,l){
+  const on=lcaGestoOn('Reparo meniscal '+l), p=`lca_rep_${s}`;
+  return {
+    tecnicas: on?checked(p+'_tec'):null,
+    detalle: on?lcaPts(p,LCA_PASO.map(x=>x[0])):null,
+    total: on?numOrNull(p+'_total'):null
+  };
+}
+function collectLcaRadial(s,l){
+  const on=lcaGestoOn('Reparo radial '+l), p=`lca_rad_${s}`;
+  if(!on) return {constructo:null,detalle:null,total:null,tt:null,fij:null};
+  const det={};
+  LCA_RAD_CONSTR.forEach(([k])=>{ det[k]=lcaPts(`${p}_${k}`,LCA_PASO.map(x=>x[0])); });
+  det.transtibial={};
+  LCA_RAD_TT.forEach(([k])=>{ det.transtibial[k.replace('tt_','')]=numOrNull(`${p}_${k}`); });
+  return {constructo:checked(p+'_constructo'),detalle:det,total:numOrNull(p+'_total'),tt:checked(p+'_tt_tec'),fij:val(p+'_tt_fijacion_distal')};
+}
+function collectLcaRaiz(s,l){
+  const on=lcaGestoOn('Reparo de raíz '+l), p=`lca_raiz_${s}`;
+  if(!on) return {tecnica:null,anclas:null,tuneles:null,suturas:null,fij:null};
+  return {tecnica:val(p+'_tecnica'),anclas:numOrNull(p+'_num_anclas'),tuneles:numOrNull(p+'_num_tuneles'),suturas:numOrNull(p+'_num_suturas'),fij:val(p+'_fijacion_distal')};
+}
+function collectModLCA(){
+  const sm=collectLcaReparo('med','medial'), sl=collectLcaReparo('lat','lateral');
+  const rm=collectLcaRadial('med','medial'), rl=collectLcaRadial('lat','lateral');
+  const zm=collectLcaRaiz('med','medial'), zl=collectLcaRaiz('lat','lateral');
+  const rampaOn=lcaGestoOn('Reparo de lesión en rampa');
+  const oatsOn=lcaGestoOn('OATS');
+  return {
+    tiempo_lesion_cirugia_meses: numOrNull('tiempo_lesion_cirugia'),
+    menisco_medial_afectado: boolFromSiNo('lca_menisco_medial'), isakos_medial: val('isakos_medial'),
+    menisco_lateral_afectado: boolFromSiNo('lca_menisco_lateral'), isakos_lateral: val('isakos_lateral'),
+    lesion_condral: boolFromSiNo('lca_condral'), condral_ubicacion: checked('condral_ubicacion'), condral_icrs: val('condral_icrs'),
+    remanente_identificado: boolFromSiNo('lca_remanente'), remanente_preservado: boolFromSiNo('lca_remanente_preservado'),
+    tipo_injerto: val('injerto'), injerto_diametro_mm: numOrNull('injerto_diametro'), injerto_fasciculos: val('injerto_fasciculos'),
+    tecnica_tunel_femoral: val('tunel_femoral'),
+    fijacion_femoral: val('fijacion_femoral'), fijacion_tibial: val('fijacion_tibial'),
+    fijacion_tibial_secundaria: boolFromSiNo('fij_tib_sec'), fijacion_tibial_secundaria_tipo: val('fij_tib_sec_tipo'),
+    gesto_asociado: checked('gesto'),
+    reparo_medial_tecnicas: sm.tecnicas, reparo_medial_puntos_detalle: sm.detalle, reparo_medial_puntos_total: sm.total,
+    reparo_lateral_tecnicas: sl.tecnicas, reparo_lateral_puntos_detalle: sl.detalle, reparo_lateral_puntos_total: sl.total,
+    radial_medial_constructo: rm.constructo, radial_medial_puntos_detalle: rm.detalle, radial_medial_puntos_total: rm.total,
+    radial_medial_transtibial_subtecnica: rm.tt, radial_medial_tt_fijacion_distal: rm.fij,
+    radial_lateral_constructo: rl.constructo, radial_lateral_puntos_detalle: rl.detalle, radial_lateral_puntos_total: rl.total,
+    radial_lateral_transtibial_subtecnica: rl.tt, radial_lateral_tt_fijacion_distal: rl.fij,
+    raiz_medial_tecnica: zm.tecnica, raiz_medial_num_anclas: zm.anclas, raiz_medial_num_tuneles: zm.tuneles,
+    raiz_medial_num_suturas: zm.suturas, raiz_medial_fijacion_distal: zm.fij,
+    raiz_lateral_tecnica: zl.tecnica, raiz_lateral_num_anclas: zl.anclas, raiz_lateral_num_tuneles: zl.tuneles,
+    raiz_lateral_num_suturas: zl.suturas, raiz_lateral_fijacion_distal: zl.fij,
+    rampa_tecnicas: rampaOn?checked('lca_rampa_tec'):null,
+    rampa_puntos_detalle: rampaOn?lcaPts('lca_rampa',LCA_RAMPA_TEC.map(x=>x[0])):null,
+    rampa_puntos_total: rampaOn?numOrNull('lca_rampa_total'):null,
+    oats_diametro_mm: oatsOn?numOrNull('lca_oats_diametro'):null,
+    refuerzo_anterolateral: boolFromSiNo('refuerzo_al'), refuerzo_al_tipo: val('refuerzo_al_tipo'), refuerzo_al_fijacion: val('refuerzo_al_fijacion'),
+    refuerzo_al_angulo_fijacion: numOrNull('refuerzo_al_angulo'),
+    tiempo_qx_min: numOrNull('lca_tiempo_qx')
+  };
+}
+
 // Registro de módulos ya conectados a Supabase — agregar aquí cada vez que se escriba
-// un collectMod*() nuevo para otro módulo (LCA, Osteotomía, etc.).
-const MOD_COLLECTORS={meniscal:collectModMeniscal, atr:collectModATR};
-const MOD_TABLES={meniscal:'mod_meniscal', atr:'mod_atr'};
+// un collectMod*() nuevo para otro módulo (Osteotomía, etc.).
+const MOD_COLLECTORS={meniscal:collectModMeniscal, atr:collectModATR, lca:collectModLCA};
+const MOD_TABLES={meniscal:'mod_meniscal', atr:'mod_atr', lca:'mod_lca'};
 
 async function guardarVisita(){
   const {data:{session}}=await sb.auth.getSession();
@@ -2225,7 +2411,7 @@ async function guardarVisita(){
   const mod=window._currentModule;
   const collector=MOD_COLLECTORS[mod];
   if(!collector){
-    showToast('Este módulo aún no está conectado a Supabase — por ahora: Meniscal, ATR.');
+    showToast('Este módulo aún no está conectado a Supabase — por ahora: LCA, Meniscal, ATR.');
     return;
   }
   try{
