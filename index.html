@@ -60,6 +60,7 @@ main{max-width:820px;margin:0 auto;padding:20px 16px 80px}
 .chk:hover{border-color:var(--teal);background:#f0fdf9}
 .chk input{accent-color:var(--teal);width:16px;height:16px;flex-shrink:0}
 .chk:has(input:checked){border-color:var(--teal);background:#f0fdf9;color:var(--navy);font-weight:700}
+.atr-hide{display:none!important}
 .subsec{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 8px;padding-top:10px;border-top:0.5px solid var(--border)}
 .subsec:first-child{margin-top:0;padding-top:0;border-top:none}
 .laterality-box{background:#fff7ed;border:0.5px solid #fed7aa;border-radius:9px;padding:10px 12px;margin-bottom:14px}
@@ -226,7 +227,7 @@ table.visits td{padding:6px 8px;border-bottom:0.5px solid var(--border)}
       <div class="module-toggle">
         <button type="button" class="module-btn active" id="btn-mod-lca" onclick="setModule('lca')">LCA</button>
         <button type="button" class="module-btn" id="btn-mod-meniscal" onclick="setModule('meniscal')">Meniscal</button>
-        <button type="button" class="module-btn" id="btn-mod-atr" onclick="setModule('atr')">ATR</button>
+        <button type="button" class="module-btn" id="btn-mod-atr" onclick="setModule('atr')">Artroplastia</button>
         <button type="button" class="module-btn" id="btn-mod-osteotomia" onclick="setModule('osteotomia')">Osteotomía</button>
         <button type="button" class="module-btn" id="btn-mod-multiligamentaria" onclick="setModule('multiligamentaria')">Multiligamentaria</button>
         <button type="button" class="module-btn" id="btn-mod-patelofemoral" onclick="setModule('patelofemoral')">Patelofemoral (inestabilidad)</button>
@@ -340,8 +341,8 @@ table.visits td{padding:6px 8px;border-bottom:0.5px solid var(--border)}
         <select id="refuerzo_al" onchange="toggleCond('refuerzo_al','refuerzo_al_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
       </div>
       <div class="grid3 conditional" id="refuerzo_al_wrap">
-        <div class="field"><label>Tipo</label><select id="refuerzo_al_tipo"><option value="">Seleccionar</option><option>Tenodesis tipo Lemaire</option><option>Reconstrucción de ligamento anterolateral</option></select></div>
-        <div class="field"><label>Fijación</label><select id="refuerzo_al_fijacion"><option value="">Seleccionar</option><option>Ancla</option><option>Tornillo</option><option>Grapa</option></select></div>
+        <div class="field"><label>Tipo</label><select id="refuerzo_al_tipo" onchange="toggleRefuerzoTipo()"><option value="">Seleccionar</option><option>Tenodesis tipo Lemaire</option><option>Tenodesis tipo MacIntosh (tejidos blandos)</option><option>Reconstrucción de ligamento anterolateral</option></select></div>
+        <div class="field"><label>Fijación</label><select id="refuerzo_al_fijacion"><option value="">Seleccionar</option><option>Ancla</option><option>Tornillo</option><option>Grapa</option></select><div class="hint" id="refuerzo_al_fij_na" style="display:none;margin-top:6px">Técnica de tejidos blandos: no requiere material de fijación. Registra solo el ángulo de flexión.</div></div>
         <div class="field"><label>Ángulo de flexión en la fijación</label><select id="refuerzo_al_angulo"><option value="">Seleccionar</option><option value="0">0°</option><option value="30">30°</option><option value="60">60°</option><option value="90">90°</option></select></div>
       </div>
 
@@ -489,9 +490,19 @@ table.visits td{padding:6px 8px;border-bottom:0.5px solid var(--border)}
 
   <!-- 4C. ATR -->
   <div class="card module-panel" id="panel-atr">
-    <div class="card-h"><span class="n">4</span>Módulo ATR — artroplastia total de rodilla</div>
+    <div class="card-h"><span class="n">4</span>Módulo Artroplastia de rodilla — total, unicompartimental o patelofemoral</div>
     <div class="card-b">
-      <div class="laterality-box"><label>Rodilla operada</label><select id="atr_lateralidad"><option value="">Seleccionar</option><option>Derecha</option><option>Izquierda</option><option>Bilateral</option></select></div>
+      <div class="grid2">
+        <div class="laterality-box" style="margin:0"><label>Rodilla operada</label><select id="atr_lateralidad"><option value="">Seleccionar</option><option>Derecha</option><option>Izquierda</option><option>Bilateral</option></select></div>
+        <div class="laterality-box" style="margin:0"><label>Tipo de artroplastia</label>
+          <select id="atr_tipo_artroplastia" onchange="applyAtrTipo()">
+            <option value="Total">Total</option>
+            <option value="Unicompartimental medial">Unicompartimental medial</option>
+            <option value="Unicompartimental lateral">Unicompartimental lateral</option>
+            <option value="Patelofemoral">Patelofemoral</option>
+          </select>
+        </div>
+      </div>
 
       <div class="subsec">Preoperatorio</div>
       <div class="grid2">
@@ -514,33 +525,60 @@ table.visits td{padding:6px 8px;border-bottom:0.5px solid var(--border)}
           <select id="atr_infilt_sustancia"><option value="">Seleccionar</option><option>Corticoide</option><option>Ácido hialurónico</option><option>PRP</option><option>Otro</option></select>
         </div>
       </div>
-      <div class="grid3">
+      <div class="grid3" data-atr="total uka">
         <div class="field"><label>Deformidad angular</label><select id="atr_deformidad_dir"><option value="">Seleccionar</option><option>Varo</option><option>Valgo</option><option>Neutro</option></select></div>
         <div class="field"><label>Grados</label><input type="number" step="0.1" id="atr_deformidad_grados"></div>
       </div>
 
+      <div data-atr="uka">
+        <div class="subsec">Evaluación preoperatoria — unicompartimental</div>
+        <div class="grid3">
+          <div class="field"><label>Estado del LCA</label><select id="atr_lca_estado"><option value="">Seleccionar</option><option>Íntegro</option><option>Deficiente</option></select></div>
+          <div class="field"><label id="atr_kl_contra_label">KL del compartimento lateral (contralateral)</label><select id="atr_kl_contra"><option value="">Seleccionar</option><option value="0">0 — sin artrosis</option><option value="I">I</option><option value="II">II</option><option value="III">III</option><option value="IV">IV</option></select></div>
+          <div class="field"><label>Iwano — compartimento patelofemoral</label><select id="atr_iwano_pf"><option value="">Seleccionar</option><option value="Sin artrosis">Sin artrosis</option><option value="I">I — espacio &gt;3 mm</option><option value="II">II — espacio &lt;3 mm, sin contacto óseo</option><option value="III">III — contacto óseo &lt;¼ de la superficie</option><option value="IV">IV — contacto óseo completo</option></select></div>
+        </div>
+        <p class="hint">Iwano se gradúa sobre la axial (skyline) según el espacio articular patelofemoral; KL se usa para el compartimento tibiofemoral contralateral.</p>
+      </div>
+      <div data-atr="pfa">
+        <div class="subsec">Evaluación preoperatoria — patelofemoral</div>
+        <div class="grid2">
+          <div class="field"><label>KL compartimento medial (tibiofemoral)</label><select id="atr_kl_medial"><option value="">Seleccionar</option><option value="0">0 — sin artrosis</option><option value="I">I</option><option value="II">II</option><option value="III">III</option><option value="IV">IV</option></select></div>
+          <div class="field"><label>KL compartimento lateral (tibiofemoral)</label><select id="atr_kl_lateral"><option value="">Seleccionar</option><option value="0">0 — sin artrosis</option><option value="I">I</option><option value="II">II</option><option value="III">III</option><option value="IV">IV</option></select></div>
+        </div>
+      </div>
+
       <div class="subsec">Implante — trazabilidad</div>
+      <div id="atr_casa_slot"></div>
       <div class="grid2">
-        <div class="field"><label>Marca de la prótesis</label><input id="atr_marca" placeholder="Para trazabilidad"></div>
-        <div class="field"><label>Tipo de prótesis</label><select id="atr_tipo"><option value="">Seleccionar</option><option>Cruciate-retaining (CR)</option><option>Posterior-stabilized (PS)</option><option>Pivote medial</option><option>Otra</option></select></div>
+        <div class="field"><label>Marca / modelo de la prótesis</label><input id="atr_marca" placeholder="Ej: línea o modelo del implante"></div>
+        <div class="field" data-atr="total"><label>Tipo de prótesis</label><select id="atr_tipo"><option value="">Seleccionar</option><option>Cruciate-retaining (CR)</option><option>Posterior-stabilized (PS)</option><option>Pivote medial</option><option>Otra</option></select></div>
+        <div class="field" data-atr="uka"><label>Tipo de inserto</label><select id="atr_inserto_tipo"><option value="">Seleccionar</option><option>Fijo</option><option>Móvil</option></select></div>
       </div>
       <div class="grid2">
         <div class="field"><label>Fijación</label><select id="atr_fijacion"><option value="">Seleccionar</option><option>Cementada</option><option>No cementada</option><option>Híbrida</option></select></div>
         <div class="field"><label>Polietileno</label><select id="atr_polietileno"><option value="">Seleccionar</option><option>Convencional</option><option>Altamente entrecruzado (highly cross-linked)</option></select></div>
       </div>
-      <div class="grid3">
+      <div class="grid3" data-atr="total uka">
         <div class="field"><label>Tamaño comp. femoral</label><input id="atr_talla_femoral"></div>
         <div class="field"><label>Tamaño comp. tibial</label><input id="atr_talla_tibial"></div>
         <div class="field"><label>Tamaño inserto</label><input id="atr_talla_inserto"></div>
       </div>
+      <div data-atr="pfa">
+        <div class="grid2">
+          <div class="field"><label>Talla de tróclea</label><input id="atr_talla_troclea"></div>
+        </div>
+      </div>
+      <div data-atr="total pfa">
       <div class="grid2">
         <div class="field">
-          <label>Cambio de botón patelar</label>
+          <label>Botón patelar (cambio / colocación)</label>
           <select id="atr_boton_patelar" onchange="toggleCond('atr_boton_patelar','atr_boton_patelar_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
         </div>
         <div class="field conditional" id="atr_boton_patelar_wrap"><label>Tamaño del botón</label><input id="atr_boton_patelar_talla"></div>
       </div>
+      </div>
 
+      <div data-atr="total">
       <div class="subsec">Componentes de revisión en primaria compleja</div>
       <p class="hint" style="margin-bottom:8px">Solo si esta primaria requirió aumentos, independiente de que la cirugía siga siendo primaria (no revisión completa).</p>
       <div class="grid3">
@@ -557,6 +595,7 @@ table.visits td{padding:6px 8px;border-bottom:0.5px solid var(--border)}
         <div class="field"><label>Vástagos (stems)</label><select id="atr_vastagos" onchange="toggleCond('atr_vastagos','atr_vastagos_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select></div>
         <div class="field conditional" id="atr_vastagos_wrap"><label>Ubicación</label><select id="atr_vastagos_ubic"><option value="">Seleccionar</option><option>Fémur</option><option>Tibia</option><option>Ambos</option></select></div>
         <div class="field conditional" id="atr_vastagos_wrap2"><label>Tamaño (diámetro/longitud)</label><input id="atr_vastagos_talla"></div>
+      </div>
       </div>
 
       <div class="subsec">Técnica quirúrgica</div>
@@ -1870,6 +1909,12 @@ const MODULE_SCALES={
   patelofemoral:{kujala:'req',bpii:'req',npi:'opt'},
   mecext:{lysholm:'req',ikdc:'opt',visap:'opt'}
 };
+// Patelofemoral (artroplastia): Kujala obligatorio; Oxford y KOOS opcionales
+const ATR_PFA_SCALES={kujala:'req',oxford:'opt',koos:'opt'};
+function scalesFor(mod){
+  if(mod==='atr' && typeof atrTipoKey==='function' && atrTipoKey()==='pfa') return ATR_PFA_SCALES;
+  return MODULE_SCALES[mod];
+}
 function setModule(mod){
   MODULES.forEach(m=>{
     document.getElementById('panel-'+m).classList.toggle('active',mod===m);
@@ -1879,7 +1924,7 @@ function setModule(mod){
   window._currentModule=mod;
 
   // Escalas: mostrar solo las del módulo activo, con badge obligatorio/opcional
-  const cfg=MODULE_SCALES[mod];
+  const cfg=scalesFor(mod);
   document.querySelectorAll('.scale-box').forEach(box=>{
     const key=box.dataset.scale;
     if(cfg && cfg[key]){
@@ -2104,6 +2149,7 @@ async function collectPacienteCore(){
 
 function collectModMeniscal(){
   return {
+    ...collectCasa('meniscal'),
     menisco_afectado: val('men_afectado'),
     localizacion: checked('men_loc'),
     patron_rotura: val('men_patron'),
@@ -2176,6 +2222,58 @@ function collectVisita(){
   };
 }
 
+// ── Casa médica (opcional, todos los módulos) ──
+const CASAS_MEDICAS=['Smith+Nephew','Arthrex','DePuy Synthes','Stryker','Rejoin','Piemca','Promed'];
+const CASA_PANELS={lca:'lca',meniscal:'meniscal',atr:'atr',osteotomia:'osteotomia',multiligamentaria:'multiligamentaria',patelofemoral:'patelofemoral',mecext:'mecext'};
+function casaHtml(mod){
+  return `<div class="grid2" data-casa="${mod}">
+    <div class="field"><label>Casa médica (opcional)</label><select id="casa_${mod}" onchange="toggleCasaOtra('${mod}')"><option value="">Seleccionar</option>${CASAS_MEDICAS.map(c=>`<option>${c}</option>`).join('')}<option value="Otra">Otra</option></select></div>
+    <div class="field conditional" id="casa_${mod}_otra_wrap"><label>¿Cuál casa médica?</label><input id="casa_${mod}_otra" placeholder="Nombre de la casa médica"></div>
+  </div>`;
+}
+function toggleCasaOtra(mod){
+  document.getElementById(`casa_${mod}_otra_wrap`).classList.toggle('show',val(`casa_${mod}`)==='Otra');
+}
+function initCasaMedica(){
+  Object.keys(CASA_PANELS).forEach(mod=>{
+    const panel=document.getElementById('panel-'+mod);
+    if(!panel) return;
+    let slot=panel.querySelector('#atr_casa_slot');
+    if(!slot){
+      const heads=[...panel.querySelectorAll('.subsec')];
+      const h=heads.find(x=>/Técnica quirúrgica|Otros datos operatorios/.test(x.textContent));
+      if(!h) return;
+      slot=document.createElement('div');
+      h.insertAdjacentElement('afterend',slot);
+    }
+    slot.innerHTML=casaHtml(mod);
+  });
+}
+function collectCasa(mod){
+  const c=val(`casa_${mod}`);
+  return {casa_medica:c, casa_medica_otra:c==='Otra'?val(`casa_${mod}_otra`):null};
+}
+
+// ── ATR: tipo de artroplastia (total / unicompartimental medial-lateral / patelofemoral) ──
+function atrTipoKey(){
+  const t=val('atr_tipo_artroplastia');
+  if(t==='Patelofemoral') return 'pfa';
+  if(t&&t.startsWith('Unicompartimental')) return 'uka';
+  return 'total';
+}
+function applyAtrTipo(){
+  const k=atrTipoKey();
+  document.querySelectorAll('#panel-atr [data-atr]').forEach(el=>{
+    el.classList.toggle('atr-hide',!el.dataset.atr.split(' ').includes(k));
+  });
+  const lado=val('atr_tipo_artroplastia')==='Unicompartimental lateral'?'medial':'lateral';
+  const lab=document.getElementById('atr_kl_contra_label');
+  if(lab) lab.textContent=`KL del compartimento ${lado} (contralateral)`;
+  if(window._currentModule==='atr') setModule('atr');   // las escalas obligatorias dependen del tipo
+}
+initCasaMedica();
+applyAtrTipo();
+
 // Mapea las etiquetas del select (más legibles en el formulario) a los valores exactos
 // que acepta el check constraint de mod_atr.tipo_implante en schema.sql (CR/PS/Pivote medial).
 // "Otra" no está en el constraint todavía — se guarda como null hasta que se amplíe en la BD.
@@ -2186,31 +2284,44 @@ function mapTipoImplanteATR(v){
   return null;
 }
 function collectModATR(){
+  const k=atrTipoKey(), total=k==='total', uka=k==='uka', pfa=k==='pfa';
+  const conBoton=total||pfa;
   return {
+    tipo_artroplastia: val('atr_tipo_artroplastia')||'Total',
     cirugia_previa: boolFromSiNo('atr_cx_previa'),
     cirugia_previa_detalle: val('atr_cx_previa_detalle'),
     infiltracion_previa: boolFromSiNo('atr_infilt_previa'),
     infiltracion_sustancia: val('atr_infilt_sustancia'),
-    deformidad_direccion: val('atr_deformidad_dir'),
-    deformidad_grados: numOrNull('atr_deformidad_grados'),
+    deformidad_direccion: (total||uka)?val('atr_deformidad_dir'):null,
+    deformidad_grados: (total||uka)?numOrNull('atr_deformidad_grados'):null,
+    // Evaluación preoperatoria específica
+    lca_estado: uka?val('atr_lca_estado'):null,
+    kl_contralateral: uka?val('atr_kl_contra'):null,
+    iwano_pf: uka?val('atr_iwano_pf'):null,
+    kl_medial: pfa?val('atr_kl_medial'):null,
+    kl_lateral: pfa?val('atr_kl_lateral'):null,
+    // Implante
     marca_protesis: val('atr_marca'),
-    tipo_implante: mapTipoImplanteATR(val('atr_tipo')),
+    ...collectCasa('atr'),
+    tipo_implante: total?mapTipoImplanteATR(val('atr_tipo')):null,
+    inserto_tipo: uka?val('atr_inserto_tipo'):null,
     fijacion: val('atr_fijacion'),
     polietileno: val('atr_polietileno'),
-    talla_femoral: val('atr_talla_femoral'),
-    talla_tibial: val('atr_talla_tibial'),
-    talla_inserto: val('atr_talla_inserto'),
-    boton_patelar: boolFromSiNo('atr_boton_patelar'),
-    boton_patelar_talla: val('atr_boton_patelar_talla'),
-    cunas: boolFromSiNo('atr_cunas'),
-    cunas_ubicacion: val('atr_cunas_ubic'),
-    cunas_talla: val('atr_cunas_talla'),
-    conos: boolFromSiNo('atr_conos'),
-    conos_ubicacion: val('atr_conos_ubic'),
-    conos_talla: val('atr_conos_talla'),
-    vastagos: boolFromSiNo('atr_vastagos'),
-    vastagos_ubicacion: val('atr_vastagos_ubic'),
-    vastagos_talla: val('atr_vastagos_talla'),
+    talla_femoral: (total||uka)?val('atr_talla_femoral'):null,
+    talla_tibial: (total||uka)?val('atr_talla_tibial'):null,
+    talla_inserto: (total||uka)?val('atr_talla_inserto'):null,
+    talla_troclea: pfa?val('atr_talla_troclea'):null,
+    boton_patelar: conBoton?boolFromSiNo('atr_boton_patelar'):null,
+    boton_patelar_talla: conBoton?val('atr_boton_patelar_talla'):null,
+    cunas: total?boolFromSiNo('atr_cunas'):null,
+    cunas_ubicacion: total?val('atr_cunas_ubic'):null,
+    cunas_talla: total?val('atr_cunas_talla'):null,
+    conos: total?boolFromSiNo('atr_conos'):null,
+    conos_ubicacion: total?val('atr_conos_ubic'):null,
+    conos_talla: total?val('atr_conos_talla'):null,
+    vastagos: total?boolFromSiNo('atr_vastagos'):null,
+    vastagos_ubicacion: total?val('atr_vastagos_ubic'):null,
+    vastagos_talla: total?val('atr_vastagos_talla'):null,
     abordaje: val('atr_abordaje'),
     alineacion: val('atr_alineacion'),
     asistencia_robotica: boolFromSiNo('atr_robotica'),
@@ -2287,6 +2398,15 @@ function lcaBlkRampa(){
     <div class="grid2">${LCA_RAMPA_TEC.map(([k,v])=>`<div class="field conditional" id="${p}_${k}_wrap"><label>Puntos — ${v}</label><input type="number" min="0" id="${p}_${k}" class="lca-pts" data-total="${p}_total"></div>`).join('')}</div>
     <div class="field"><label>Número total de puntos — rampa</label><input type="number" min="0" id="${p}_total"></div>
   </div>`;
+}
+const REFUERZO_SIN_MATERIAL='Sin material de fijación (tejidos blandos)';
+function refuerzoEsTejidosBlandos(){ return (val('refuerzo_al_tipo')||'').includes('MacIntosh'); }
+function toggleRefuerzoTipo(){
+  const blando=refuerzoEsTejidosBlandos();
+  const sel=document.getElementById('refuerzo_al_fijacion');
+  sel.style.display=blando?'none':'';
+  if(blando) sel.value='';
+  document.getElementById('refuerzo_al_fij_na').style.display=blando?'block':'none';
 }
 function lcaBlkOats(){
   return `<div class="conditional" id="lca_blk_oats">
@@ -2367,7 +2487,9 @@ function collectModLCA(){
   const zm=collectLcaRaiz('med','medial'), zl=collectLcaRaiz('lat','lateral');
   const rampaOn=lcaGestoOn('Reparo de lesión en rampa');
   const oatsOn=lcaGestoOn('OATS');
+  const refuerzoOn=boolFromSiNo('refuerzo_al')===true;
   return {
+    ...collectCasa('lca'),
     tiempo_lesion_cirugia_meses: numOrNull('tiempo_lesion_cirugia'),
     menisco_medial_afectado: boolFromSiNo('lca_menisco_medial'), isakos_medial: val('isakos_medial'),
     menisco_lateral_afectado: boolFromSiNo('lca_menisco_lateral'), isakos_lateral: val('isakos_lateral'),
@@ -2392,8 +2514,10 @@ function collectModLCA(){
     rampa_puntos_detalle: rampaOn?lcaPts('lca_rampa',LCA_RAMPA_TEC.map(x=>x[0])):null,
     rampa_puntos_total: rampaOn?numOrNull('lca_rampa_total'):null,
     oats_diametro_mm: oatsOn?numOrNull('lca_oats_diametro'):null,
-    refuerzo_anterolateral: boolFromSiNo('refuerzo_al'), refuerzo_al_tipo: val('refuerzo_al_tipo'), refuerzo_al_fijacion: val('refuerzo_al_fijacion'),
-    refuerzo_al_angulo_fijacion: numOrNull('refuerzo_al_angulo'),
+    refuerzo_anterolateral: boolFromSiNo('refuerzo_al'),
+    refuerzo_al_tipo: refuerzoOn?val('refuerzo_al_tipo'):null,
+    refuerzo_al_fijacion: refuerzoOn?(refuerzoEsTejidosBlandos()?REFUERZO_SIN_MATERIAL:val('refuerzo_al_fijacion')):null,
+    refuerzo_al_angulo_fijacion: refuerzoOn?numOrNull('refuerzo_al_angulo'):null,
     tiempo_qx_min: numOrNull('lca_tiempo_qx')
   };
 }
