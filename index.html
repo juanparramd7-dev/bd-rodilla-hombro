@@ -2522,10 +2522,77 @@ function collectModLCA(){
   };
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// MULTILIGAMENTARIA
+// ══════════════════════════════════════════════════════════════════════════
+// Misma lógica de mapeo que updateMlki(): se recalcula aquí en vez de leer el
+// texto ya formateado del div, para no depender del DOM/idioma de esa etiqueta.
+function calcMlki(estructuras){
+  if(!estructuras.length) return null;
+  const map={LCA:'A',LCP:'P',PMC:'M',PLC:'L'};
+  const numCruciados=(estructuras.includes('LCA')?1:0)+(estructuras.includes('LCP')?1:0);
+  const letras=['LCA','LCP','PMC','PLC'].filter(k=>estructuras.includes(k)).map(k=>map[k]).join('');
+  return numCruciados>0 ? `MLKI ${numCruciados}-${letras}` : `MLKI —${letras} (sin lesión de cruzado)`;
+}
+function collectModMultiligamentaria(){
+  const luxacionFranca=boolFromSiNo('ml_luxacion');
+  const estructuras=checked('ml_estructuras');
+  const vascularOn=boolFromSiNo('ml_vascular')===true;
+  const neuroOn=boolFromSiNo('ml_neuro')===true;
+  const fracturaOn=boolFromSiNo('ml_fractura')===true;
+  const meniscoMedialOn=boolFromSiNo('ml_menisco_medial')===true;
+  const meniscoLateralOn=boolFromSiNo('ml_menisco_lateral')===true;
+  const lcp2fijOn=boolFromSiNo('ml_lcp_2fijacion')===true;
+  return {
+    nivel_energia: val('ml_energia'),
+    luxacion_franca: luxacionFranca,
+    lesion_vascular: boolFromSiNo('ml_vascular'),
+    vascular_arteria: vascularOn?val('ml_vascular_arteria'):null,
+    vascular_manejo: vascularOn?val('ml_vascular_manejo'):null,
+    lesion_neurologica: boolFromSiNo('ml_neuro'),
+    neuro_nervio: neuroOn?val('ml_neuro_nervio'):null,
+    neuro_severidad: neuroOn?val('ml_neuro_severidad'):null,
+    fractura_asociada: boolFromSiNo('ml_fractura'),
+    fractura_detalle: fracturaOn?val('ml_fractura_detalle'):null,
+    schenck: luxacionFranca===true?val('ml_schenck'):null,
+    mlki_calculado: luxacionFranca!==true?calcMlki(estructuras):null,
+    estructuras_afectadas: estructuras,
+    menisco_medial_afectado: boolFromSiNo('ml_menisco_medial'),
+    isakos_medial: meniscoMedialOn?val('ml_isakos_medial'):null,
+    menisco_lateral_afectado: boolFromSiNo('ml_menisco_lateral'),
+    isakos_lateral: meniscoLateralOn?val('ml_isakos_lateral'):null,
+    lesion_condral: boolFromSiNo('ml_condral'),
+    // LCA (solo si fue marcado arriba en estructuras afectadas)
+    lca_injerto: estructuras.includes('LCA')?val('ml_lca_injerto'):null,
+    lca_fijacion: estructuras.includes('LCA')?val('ml_lca_fijacion'):null,
+    // LCP
+    lcp_haz: estructuras.includes('LCP')?val('ml_lcp_haz'):null,
+    lcp_tecnica: estructuras.includes('LCP')?val('ml_lcp_tecnica'):null,
+    lcp_injerto: estructuras.includes('LCP')?val('ml_lcp_injerto'):null,
+    lcp_fijacion: estructuras.includes('LCP')?val('ml_lcp_fijacion'):null,
+    lcp_segunda_fijacion: estructuras.includes('LCP')?boolFromSiNo('ml_lcp_2fijacion'):null,
+    lcp_segunda_fijacion_tipo: (estructuras.includes('LCP')&&lcp2fijOn)?val('ml_lcp_2fijacion_tipo'):null,
+    // PLC
+    plc_tecnica: estructuras.includes('PLC')?val('ml_plc_tecnica'):null,
+    plc_injerto_fijacion: estructuras.includes('PLC')?val('ml_plc_injerto'):null,
+    // PMC
+    pmc_tipo: estructuras.includes('PMC')?val('ml_pmc_tipo'):null,
+    pmc_tecnica: estructuras.includes('PMC')?val('ml_pmc_tecnica'):null,
+    pmc_aislada: estructuras.includes('PMC')?boolFromSiNo('ml_pmc_aislada'):null,
+    pmc_injerto_fijacion: estructuras.includes('PMC')?val('ml_pmc_injerto'):null,
+    ssd_pre: numOrNull('ml_ssd_pre'),
+    ssd_post: numOrNull('ml_ssd_post'),
+    inmovilizacion_tipo: val('ml_inmovilizacion'),
+    inmovilizacion_tiempo: val('ml_inmovilizacion_tiempo'),
+    tiempo_qx_min: numOrNull('ml_tiempo_qx'),
+    ...collectCasa('multiligamentaria')
+  };
+}
+
 // Registro de módulos ya conectados a Supabase — agregar aquí cada vez que se escriba
 // un collectMod*() nuevo para otro módulo (Osteotomía, etc.).
-const MOD_COLLECTORS={meniscal:collectModMeniscal, atr:collectModATR, lca:collectModLCA};
-const MOD_TABLES={meniscal:'mod_meniscal', atr:'mod_atr', lca:'mod_lca'};
+const MOD_COLLECTORS={meniscal:collectModMeniscal, atr:collectModATR, lca:collectModLCA, multiligamentaria:collectModMultiligamentaria};
+const MOD_TABLES={meniscal:'mod_meniscal', atr:'mod_atr', lca:'mod_lca', multiligamentaria:'mod_multiligamentaria'};
 
 async function guardarVisita(){
   const {data:{session}}=await sb.auth.getSession();
