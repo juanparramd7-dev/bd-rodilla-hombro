@@ -964,10 +964,14 @@ table.visits td{padding:6px 8px;border-bottom:0.5px solid var(--border)}
 
       <div class="subsec">Preoperatorio</div>
       <div class="grid2">
-        <div class="field"><label>Cronicidad</label><select id="mx_cronicidad"><option value="">Seleccionar</option><option>Agudo (&lt;3 semanas)</option><option>Crónico (&gt;3 semanas)</option></select></div>
+        <div class="field"><label>Cronicidad</label><select id="mx_cronicidad" onchange="toggleMxCronicidad()"><option value="">Seleccionar</option><option>Agudo (&lt;3 semanas)</option><option>Crónico (&gt;3 semanas)</option></select></div>
         <div class="field"><label>Altura patelar preop (Caton-Deschamps)</label><input type="number" step="0.01" id="mx_caton"></div>
       </div>
       <p class="hint">Cronicidad con corte a 3 semanas (ventana práctica para reparo primario). La clasificación clásica de Siwek-Rao corta en 2 semanas; algunas series consideran "reparo diferido" desde las 6 semanas.</p>
+      <div class="field conditional" id="mx_gap_wrap">
+        <label>Retracción / brecha (gap) del tendón, medida intraoperatoria (cm)</label>
+        <input type="number" step="0.1" min="0" id="mx_gap_cm">
+      </div>
       <div class="field conditional" id="mx_localiz_rotuliano_wrap">
         <label>Localización de la ruptura (rotuliano)</label>
         <select id="mx_localiz_rotuliano"><option value="">Seleccionar</option><option>Polo inferior de rótula (avulsión proximal)</option><option>Cuerpo del tendón (rotura media)</option><option>Tuberosidad tibial (avulsión distal)</option></select>
@@ -984,16 +988,38 @@ table.visits td{padding:6px 8px;border-bottom:0.5px solid var(--border)}
       </div>
       <div class="field conditional" id="mx_injerto_wrap">
         <label>Tipo de injerto</label>
-        <select id="mx_injerto"><option value="">Seleccionar</option><option>HTH</option><option>Isquiotibiales</option><option>Peroneo largo</option><option>Cuádriceps</option><option>Recto femoral</option><option>Aloinjerto</option><option>Sintético (cinta de sutura/malla)</option><option>Otro</option></select>
+        <select id="mx_injerto"><option value="">Seleccionar</option><option>HTH (autoinjerto)</option><option>Isquiotibiales (autoinjerto)</option><option>Peroneo largo (autoinjerto)</option><option>Cuádriceps (autoinjerto)</option><option>Recto femoral (autoinjerto)</option><option>Aloinjerto de tendón de Aquiles (con bloque óseo)</option><option>Aloinjerto de tendón de Aquiles (sin bloque óseo)</option><option>Aloinjerto de tendón cuadricipital</option><option>Sintético (cinta de sutura/malla)</option><option>Otro</option></select>
       </div>
-      <div class="field">
-        <label>Técnica de fijación</label>
-        <select id="mx_fijacion" onchange="toggleMxFijacion()"><option value="">Seleccionar</option><option>Túneles óseos</option><option>Suturas de anclaje</option><option>Híbrida (túneles + anclajes)</option></select>
+
+      <div class="field conditional" id="mx_fij_cuad_wrap">
+        <label>Fijación en rótula</label>
+        <select id="mx_fij_rotula_cuad" onchange="updateMxFijacionCounts()"><option value="">Seleccionar</option><option>Sistema de suspensión</option><option>Tornillo</option><option>Sutura de anclaje</option><option>Túneles óseos</option><option>Híbrida (túneles + anclajes)</option><option>Tejidos blandos</option></select>
+      </div>
+      <div class="field conditional" id="mx_fij_rot_wrap">
+        <div class="grid2">
+          <div class="field" style="margin:0"><label>Fijación en rótula (proximal)</label><select id="mx_fij_rotula_rot" onchange="updateMxFijacionCounts()"><option value="">Seleccionar</option><option>Sistema de suspensión</option><option>Tornillo</option><option>Sutura de anclaje</option><option>Túneles óseos</option><option>Híbrida (túneles + anclajes)</option><option>Tejidos blandos</option></select></div>
+          <div class="field" style="margin:0"><label>Fijación en tibia (distal)</label><select id="mx_fij_tibia_rot" onchange="updateMxFijacionCounts()"><option value="">Seleccionar</option><option>Sistema de suspensión</option><option>Tornillo</option><option>Sutura de anclaje</option><option>Túneles óseos</option><option>Híbrida (túneles + anclajes)</option><option>Tejidos blandos</option></select></div>
+        </div>
       </div>
       <div class="grid2">
-        <div class="field conditional" id="mx_tuneles_wrap"><label>Número de túneles</label><input type="number" id="mx_num_tuneles" min="0"></div>
-        <div class="field conditional" id="mx_anclajes_wrap"><label>Número de anclajes</label><input type="number" id="mx_num_anclajes" min="0"></div>
+        <div class="field">
+          <label>¿Segunda fijación (backup)?</label>
+          <select id="mx_2fijacion" onchange="toggleCond('mx_2fijacion','mx_2fijacion_wrap','Sí');updateMxFijacionCounts()"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+        <div class="field conditional" id="mx_2fijacion_wrap"><label>Tipo</label><select id="mx_2fijacion_tipo" onchange="updateMxFijacionCounts()"><option value="">Seleccionar</option><option>Sutura de anclaje</option><option>Túneles óseos</option></select></div>
       </div>
+      <div class="grid2">
+        <div class="field conditional" id="mx_num_tuneles_wrap"><label>Número de túneles óseos</label><input type="number" id="mx_num_tuneles" min="0"></div>
+        <div class="field conditional" id="mx_num_anclajes_wrap"><label>Número de anclas</label><input type="number" id="mx_num_anclajes" min="0"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Ángulo de flexión de la rodilla al fijar/tensar</label><select id="mx_angulo_fijacion"><option value="">Seleccionar</option><option value="0">0°</option><option value="30">30°</option><option value="60">60°</option><option value="90">90°</option></select></div>
+        <div class="field">
+          <label>Augmentación con cerclaje/banda de protección</label>
+          <select id="mx_cerclaje" onchange="toggleCond('mx_cerclaje','mx_cerclaje_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+        </div>
+      </div>
+      <div class="field conditional" id="mx_cerclaje_wrap"><label>Tipo de cerclaje</label><select id="mx_cerclaje_tipo"><option value="">Seleccionar</option><option>Cerclaje metálico</option><option>Cinta de sutura (tape)</option></select></div>
       <div class="field"><label>Tiempo quirúrgico total (minutos)</label><input type="number" id="mx_tiempo_qx" min="0"></div>
     </div>
   </div>
@@ -2009,7 +2035,27 @@ function toggleMxEstructura(){
   const val=document.getElementById('mx_estructura').value;
   document.getElementById('mx_localiz_rotuliano_wrap').classList.toggle('show',val==='Tendón rotuliano');
   document.getElementById('mx_localiz_cuadricipital_wrap').classList.toggle('show',val==='Tendón cuadricipital');
+  document.getElementById('mx_fij_cuad_wrap').classList.toggle('show',val==='Tendón cuadricipital');
+  document.getElementById('mx_fij_rot_wrap').classList.toggle('show',val==='Tendón rotuliano');
+  updateMxFijacionCounts();
   updateVisaPVisibility();
+}
+// Número de túneles/anclas: se despliega si CUALQUIERA de las fijaciones activas
+// (rótula, tibia si es rotuliano, o la segunda fijación) usa esa técnica —
+// el total de dispositivos se anota igual sin importar en cuál punto se usó.
+function mxFijacionesActivas(){
+  const estructura=document.getElementById('mx_estructura').value;
+  const vals=[];
+  if(estructura==='Tendón cuadricipital') vals.push(document.getElementById('mx_fij_rotula_cuad').value);
+  if(estructura==='Tendón rotuliano'){ vals.push(document.getElementById('mx_fij_rotula_rot').value); vals.push(document.getElementById('mx_fij_tibia_rot').value); }
+  if(document.getElementById('mx_2fijacion').value==='Sí') vals.push(document.getElementById('mx_2fijacion_tipo').value);
+  return vals;
+}
+function updateMxFijacionCounts(){
+  const vals=mxFijacionesActivas();
+  const HIB='Híbrida (túneles + anclajes)';
+  document.getElementById('mx_num_tuneles_wrap').classList.toggle('show',vals.some(v=>v==='Túneles óseos'||v===HIB));
+  document.getElementById('mx_num_anclajes_wrap').classList.toggle('show',vals.some(v=>v==='Sutura de anclaje'||v===HIB));
 }
 function updateVisaPVisibility(){
   const box=document.getElementById('scalebox-visap');
@@ -2021,10 +2067,9 @@ function toggleMxTecnica(){
   const val=document.getElementById('mx_tecnica').value;
   document.getElementById('mx_injerto_wrap').classList.toggle('show',val==='Reparo + aumentación'||val==='Reconstrucción');
 }
-function toggleMxFijacion(){
-  const val=document.getElementById('mx_fijacion').value;
-  document.getElementById('mx_tuneles_wrap').classList.toggle('show',val==='Túneles óseos'||val==='Híbrida (túneles + anclajes)');
-  document.getElementById('mx_anclajes_wrap').classList.toggle('show',val==='Suturas de anclaje'||val==='Híbrida (túneles + anclajes)');
+function toggleMxCronicidad(){
+  const val=document.getElementById('mx_cronicidad').value;
+  document.getElementById('mx_gap_wrap').classList.toggle('show',val==='Crónico (>3 semanas)');
 }
 
 function getLateralidad(mod){
@@ -2591,8 +2636,44 @@ function collectModMultiligamentaria(){
 
 // Registro de módulos ya conectados a Supabase — agregar aquí cada vez que se escriba
 // un collectMod*() nuevo para otro módulo (Osteotomía, etc.).
-const MOD_COLLECTORS={meniscal:collectModMeniscal, atr:collectModATR, lca:collectModLCA, multiligamentaria:collectModMultiligamentaria};
-const MOD_TABLES={meniscal:'mod_meniscal', atr:'mod_atr', lca:'mod_lca', multiligamentaria:'mod_multiligamentaria'};
+// ══════════════════════════════════════════════════════════════════════════
+// MECANISMO EXTENSOR — tendón rotuliano / cuadricipital
+// ══════════════════════════════════════════════════════════════════════════
+function collectModMecext(){
+  const estructura=val('mx_estructura');
+  const esCuad=estructura==='Tendón cuadricipital', esRot=estructura==='Tendón rotuliano';
+  const cronico=val('mx_cronicidad')==='Crónico (>3 semanas)';
+  const injertoOn=['Reparo + aumentación','Reconstrucción'].includes(val('mx_tecnica'));
+  const seg2On=boolFromSiNo('mx_2fijacion')===true;
+  const cerclajeOn=boolFromSiNo('mx_cerclaje')===true;
+  const fijaciones=mxFijacionesActivas();
+  return {
+    estructura_afectada: estructura||null,
+    cronicidad: val('mx_cronicidad'),
+    gap_retraccion_cm: cronico?numOrNull('mx_gap_cm'):null,
+    caton_deschamps_preop: numOrNull('mx_caton'),
+    localizacion_rotuliano: esRot?val('mx_localiz_rotuliano'):null,
+    localizacion_cuadricipital: esCuad?val('mx_localiz_cuadricipital'):null,
+    tecnica: val('mx_tecnica'),
+    tipo_injerto: injertoOn?val('mx_injerto'):null,
+    fijacion_rotula: esCuad?val('mx_fij_rotula_cuad'):(esRot?val('mx_fij_rotula_rot'):null),
+    fijacion_tibial: esRot?val('mx_fij_tibia_rot'):null,
+    segunda_fijacion: boolFromSiNo('mx_2fijacion'),
+    segunda_fijacion_tipo: seg2On?val('mx_2fijacion_tipo'):null,
+    // Número de túneles/anclas: cuenta el total usado en la construcción de fijación
+    // (rótula + tibia si aplica + segunda fijación), sin importar en cuál punto se usó.
+    num_tuneles: fijaciones.some(v=>v==='Túneles óseos'||v==='Híbrida (túneles + anclajes)')?numOrNull('mx_num_tuneles'):null,
+    num_anclajes: fijaciones.some(v=>v==='Sutura de anclaje'||v==='Híbrida (túneles + anclajes)')?numOrNull('mx_num_anclajes'):null,
+    angulo_fijacion: numOrNull('mx_angulo_fijacion'),
+    cerclaje: boolFromSiNo('mx_cerclaje'),
+    cerclaje_tipo: cerclajeOn?val('mx_cerclaje_tipo'):null,
+    tiempo_qx_min: numOrNull('mx_tiempo_qx'),
+    ...collectCasa('mecext')
+  };
+}
+
+const MOD_COLLECTORS={meniscal:collectModMeniscal, atr:collectModATR, lca:collectModLCA, multiligamentaria:collectModMultiligamentaria, mecext:collectModMecext};
+const MOD_TABLES={meniscal:'mod_meniscal', atr:'mod_atr', lca:'mod_lca', multiligamentaria:'mod_multiligamentaria', mecext:'mod_mecext'};
 
 async function guardarVisita(){
   const {data:{session}}=await sb.auth.getSession();
