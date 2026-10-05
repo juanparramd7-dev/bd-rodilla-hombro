@@ -789,41 +789,72 @@ table.visits td{padding:6px 8px;border-bottom:0.5px solid var(--border)}
       </div>
       <div class="field"><label>Lesión condral</label><select id="ml_condral"><option value="No">No</option><option value="Sí">Sí</option></select></div>
 
-      <div class="subsec">Técnica por estructura (llenar solo si aplica según lo marcado arriba)</div>
-      <p class="hint" style="margin-bottom:8px">LCA</p>
-      <div class="grid2">
-        <div class="field"><label>Injerto LCA</label><select id="ml_lca_injerto"><option value="">Seleccionar</option><option>HTH</option><option>Isquiotibiales</option><option>Peroneo largo</option><option>Cuádriceps</option><option>Recto femoral</option><option>Aloinjerto</option></select></div>
-        <div class="field"><label>Fijación LCA</label><select id="ml_lca_fijacion"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Suspensión</option></select></div>
-      </div>
-      <p class="hint" style="margin-bottom:8px">LCP</p>
-      <div class="grid2">
-        <div class="field"><label>Haz</label><select id="ml_lcp_haz"><option value="">Seleccionar</option><option>Doble haz</option><option>Haz único</option></select></div>
-        <div class="field"><label>Técnica</label><select id="ml_lcp_tecnica"><option value="">Seleccionar</option><option>Transtibial</option><option>Inlay</option></select></div>
-      </div>
-      <div class="grid2">
-        <div class="field"><label>Injerto LCP</label><select id="ml_lcp_injerto"><option value="">Seleccionar</option><option>HTH</option><option>Isquiotibiales</option><option>Peroneo largo</option><option>Cuádriceps</option><option>Aloinjerto</option></select></div>
-        <div class="field"><label>Fijación primaria</label><select id="ml_lcp_fijacion"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Suspensión</option></select></div>
-      </div>
-      <div class="grid2">
-        <div class="field">
-          <label>¿Segunda fijación (backup)?</label>
-          <select id="ml_lcp_2fijacion" onchange="toggleCond('ml_lcp_2fijacion','ml_lcp_2fijacion_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+      <div class="subsec">Técnica por estructura (se despliega según lo marcado arriba)</div>
+      <p class="hint">Fijación femoral = extremo en el fémur. Fijación tibial = extremo en la tibia. En PLC y PMC puede usarse más de un injerto: marca todos los que apliquen.</p>
+
+      <div class="conditional" id="ml_blk_LCA">
+        <p class="hint" style="margin-bottom:8px">LCA</p>
+        <div class="grid2">
+          <div class="field"><label>Injerto LCA</label><select id="ml_lca_injerto"><option value="">Seleccionar</option><option>HTH</option><option>Isquiotibiales</option><option>Recto femoral</option><option>HQ (hueso-cuádriceps)</option><option>Peroneo largo</option><option>Aloinjerto de tendón de Aquiles</option><option>Aloinjerto de tendón cuadricipital</option><option>Aloinjerto de tibial posterior</option><option>Aloinjerto de tibial anterior</option><option>Otro</option></select></div>
+          <div class="field"></div>
         </div>
-        <div class="field conditional" id="ml_lcp_2fijacion_wrap"><label>Tipo</label><select id="ml_lcp_2fijacion_tipo"><option value="">Seleccionar</option><option>Knotless</option><option>Tornillo con arandela</option><option>Botón</option><option>Otra</option></select></div>
+        <div class="grid2">
+          <div class="field"><label>Fijación femoral LCA</label><select id="ml_lca_fem"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Sistema de suspensión</option><option>Sutura de anclaje</option><option>Túneles óseos</option><option>Híbrida (túneles + anclajes)</option><option>Tejidos blandos</option></select></div>
+          <div class="field"><label>Fijación tibial LCA</label><select id="ml_lca_tib"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Sistema de suspensión</option><option>Sutura de anclaje</option><option>Túneles óseos</option><option>Híbrida (túneles + anclajes)</option><option>Tejidos blandos</option></select></div>
+        </div>
       </div>
-      <p class="hint" style="margin-bottom:8px">Esquina posterolateral (PLC)</p>
-      <div class="grid2">
-        <div class="field"><label>Técnica PLC</label><select id="ml_plc_tecnica"><option value="">Seleccionar</option><option>Arciero</option><option>LaPrade</option><option>Yoon</option><option>Otra</option></select></div>
-        <div class="field"><label>Injerto + fijación PLC</label><input id="ml_plc_injerto" placeholder="Injerto / fijación"></div>
+
+      <div class="conditional" id="ml_blk_LCP">
+        <p class="hint" style="margin-bottom:8px">LCP</p>
+        <div class="grid2">
+          <div class="field"><label>Haz</label><select id="ml_lcp_haz"><option value="">Seleccionar</option><option>Doble haz</option><option>Haz único</option></select></div>
+          <div class="field"><label>Técnica</label><select id="ml_lcp_tecnica"><option value="">Seleccionar</option><option>Transtibial</option><option>Inlay</option></select></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Injerto LCP</label><select id="ml_lcp_injerto"><option value="">Seleccionar</option><option>HTH</option><option>Isquiotibiales</option><option>Recto femoral</option><option>HQ (hueso-cuádriceps)</option><option>Peroneo largo</option><option>Aloinjerto de tendón de Aquiles</option><option>Aloinjerto de tendón cuadricipital</option><option>Aloinjerto de tibial posterior</option><option>Aloinjerto de tibial anterior</option><option>Otro</option></select></div>
+          <div class="field"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Fijación femoral LCP</label><select id="ml_lcp_fem"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Sistema de suspensión</option><option>Sutura de anclaje</option><option>Túneles óseos</option><option>Híbrida (túneles + anclajes)</option><option>Tejidos blandos</option></select></div>
+          <div class="field"><label>Fijación tibial LCP</label><select id="ml_lcp_tib"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Sistema de suspensión</option><option>Sutura de anclaje</option><option>Túneles óseos</option><option>Híbrida (túneles + anclajes)</option><option>Tejidos blandos</option></select></div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>¿Segunda fijación tibial (backup)?</label>
+            <select id="ml_lcp_2fijacion" onchange="toggleCond('ml_lcp_2fijacion','ml_lcp_2fijacion_wrap','Sí')"><option value="No">No</option><option value="Sí">Sí</option></select>
+          </div>
+          <div class="field conditional" id="ml_lcp_2fijacion_wrap"><label>Tipo de segunda fijación tibial</label><select id="ml_lcp_2fijacion_tipo"><option value="">Seleccionar</option><option>Knotless</option><option>Tornillo con arandela</option><option>Botón</option><option>Sutura de anclaje</option><option>Otra</option></select></div>
+        </div>
       </div>
-      <p class="hint" style="margin-bottom:8px">Esquina posteromedial (PMC)</p>
-      <div class="grid2">
-        <div class="field"><label>Tipo de procedimiento</label><select id="ml_pmc_tipo"><option value="">Seleccionar</option><option>Reparación/plicatura directa</option><option>Reconstrucción con injerto</option></select></div>
-        <div class="field"><label>Técnica (si reconstrucción)</label><select id="ml_pmc_tecnica"><option value="">Seleccionar</option><option>LaPrade-Wijdicks</option><option>Kim</option><option>Canuto</option><option>Otra</option></select></div>
+
+      <div class="conditional" id="ml_blk_PLC">
+        <p class="hint" style="margin-bottom:8px">Esquina posterolateral (PLC)</p>
+        <div class="grid2">
+          <div class="field"><label>Técnica PLC</label><select id="ml_plc_tecnica"><option value="">Seleccionar</option><option>Arciero</option><option>LaPrade</option><option>Yoon</option><option>Otra</option></select></div>
+          <div class="field"></div>
+        </div>
+        <div class="field"><label>Injerto(s) PLC (puede ser más de uno)</label><div class="check-grid"><label class="chk"><input type="checkbox" name="ml_plc_injerto" value="HTH">HTH</label><label class="chk"><input type="checkbox" name="ml_plc_injerto" value="Isquiotibiales">Isquiotibiales</label><label class="chk"><input type="checkbox" name="ml_plc_injerto" value="Recto femoral">Recto femoral</label><label class="chk"><input type="checkbox" name="ml_plc_injerto" value="HQ (hueso-cuádriceps)">HQ (hueso-cuádriceps)</label><label class="chk"><input type="checkbox" name="ml_plc_injerto" value="Peroneo largo">Peroneo largo</label><label class="chk"><input type="checkbox" name="ml_plc_injerto" value="Aloinjerto de tendón de Aquiles">Aloinjerto de tendón de Aquiles</label><label class="chk"><input type="checkbox" name="ml_plc_injerto" value="Aloinjerto de tendón cuadricipital">Aloinjerto de tendón cuadricipital</label><label class="chk"><input type="checkbox" name="ml_plc_injerto" value="Aloinjerto de tibial posterior">Aloinjerto de tibial posterior</label><label class="chk"><input type="checkbox" name="ml_plc_injerto" value="Aloinjerto de tibial anterior">Aloinjerto de tibial anterior</label><label class="chk"><input type="checkbox" name="ml_plc_injerto" value="Otro">Otro</label></div></div>
+        <div class="grid2">
+          <div class="field"><label>Fijación femoral PLC</label><select id="ml_plc_fem"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Sistema de suspensión</option><option>Sutura de anclaje</option><option>Túneles óseos</option><option>Híbrida (túneles + anclajes)</option><option>Tejidos blandos</option></select></div>
+          <div class="field"><label>Fijación tibial PLC</label><select id="ml_plc_tib"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Sistema de suspensión</option><option>Sutura de anclaje</option><option>Túneles óseos</option><option>Híbrida (túneles + anclajes)</option><option>Tejidos blandos</option></select></div>
+        </div>
       </div>
-      <div class="grid2">
-        <div class="field"><label>¿Reconstrucción aislada de MCL (sin POL)?</label><select id="ml_pmc_aislada"><option value="">Seleccionar</option><option>Sí</option><option>No</option></select></div>
-        <div class="field"><label>Injerto + fijación PMC</label><input id="ml_pmc_injerto" placeholder="Injerto / fijación"></div>
+
+      <div class="conditional" id="ml_blk_PMC">
+        <p class="hint" style="margin-bottom:8px">Esquina posteromedial (PMC)</p>
+        <div class="grid2">
+          <div class="field"><label>Tipo de procedimiento</label><select id="ml_pmc_tipo" onchange="toggleCond('ml_pmc_tipo','ml_pmc_injerto_wrap','Reconstrucción con injerto')"><option value="">Seleccionar</option><option>Reparación/plicatura directa</option><option>Reconstrucción con injerto</option></select></div>
+          <div class="field"><label>Técnica (si reconstrucción)</label><select id="ml_pmc_tecnica"><option value="">Seleccionar</option><option>LaPrade-Wijdicks</option><option>Kim</option><option>Canuto</option><option>Otra</option></select></div>
+        </div>
+        <div class="field conditional" id="ml_pmc_injerto_wrap"><label>Injerto(s) PMC (puede ser más de uno)</label><div class="check-grid"><label class="chk"><input type="checkbox" name="ml_pmc_injerto" value="HTH">HTH</label><label class="chk"><input type="checkbox" name="ml_pmc_injerto" value="Isquiotibiales">Isquiotibiales</label><label class="chk"><input type="checkbox" name="ml_pmc_injerto" value="Recto femoral">Recto femoral</label><label class="chk"><input type="checkbox" name="ml_pmc_injerto" value="HQ (hueso-cuádriceps)">HQ (hueso-cuádriceps)</label><label class="chk"><input type="checkbox" name="ml_pmc_injerto" value="Peroneo largo">Peroneo largo</label><label class="chk"><input type="checkbox" name="ml_pmc_injerto" value="Aloinjerto de tendón de Aquiles">Aloinjerto de tendón de Aquiles</label><label class="chk"><input type="checkbox" name="ml_pmc_injerto" value="Aloinjerto de tendón cuadricipital">Aloinjerto de tendón cuadricipital</label><label class="chk"><input type="checkbox" name="ml_pmc_injerto" value="Aloinjerto de tibial posterior">Aloinjerto de tibial posterior</label><label class="chk"><input type="checkbox" name="ml_pmc_injerto" value="Aloinjerto de tibial anterior">Aloinjerto de tibial anterior</label><label class="chk"><input type="checkbox" name="ml_pmc_injerto" value="Otro">Otro</label></div></div>
+        <div class="grid2">
+          <div class="field"><label>¿Reconstrucción aislada de MCL (sin POL)?</label><select id="ml_pmc_aislada"><option value="">Seleccionar</option><option>Sí</option><option>No</option></select></div>
+          <div class="field"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Fijación femoral PMC</label><select id="ml_pmc_fem"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Sistema de suspensión</option><option>Sutura de anclaje</option><option>Túneles óseos</option><option>Híbrida (túneles + anclajes)</option><option>Tejidos blandos</option></select></div>
+          <div class="field"><label>Fijación tibial PMC</label><select id="ml_pmc_tib"><option value="">Seleccionar</option><option>Tornillo metálico</option><option>Tornillo absorbible</option><option>Sistema de suspensión</option><option>Sutura de anclaje</option><option>Túneles óseos</option><option>Híbrida (túneles + anclajes)</option><option>Tejidos blandos</option></select></div>
+        </div>
       </div>
 
       <div class="subsec">Otros datos operatorios</div>
@@ -1897,7 +1928,13 @@ function toggleMlClasificacion(){
   document.getElementById('ml_schenck_wrap').classList.toggle('show',luxacion);
   document.getElementById('ml_mlki_wrap').classList.toggle('show',!luxacion);
 }
+function toggleMlBloques(){
+  const on=[...document.querySelectorAll('input[name="ml_estructuras"]:checked')].map(c=>c.value);
+  ['LCA','LCP','PLC','PMC'].forEach(k=>document.getElementById('ml_blk_'+k).classList.toggle('show',on.includes(k)));
+  document.getElementById('ml_pmc_injerto_wrap').classList.toggle('show',document.getElementById('ml_pmc_tipo').value==='Reconstrucción con injerto');
+}
 function updateMlki(){
+  toggleMlBloques();
   const checked=[...document.querySelectorAll('input[name="ml_estructuras"]:checked')].map(c=>c.value);
   const out=document.getElementById('ml_mlki_valor');
   if(!checked.length){out.textContent='— marca las estructuras afectadas abajo —';return;}
@@ -2607,24 +2644,30 @@ function collectModMultiligamentaria(){
     menisco_lateral_afectado: boolFromSiNo('ml_menisco_lateral'),
     isakos_lateral: meniscoLateralOn?val('ml_isakos_lateral'):null,
     lesion_condral: boolFromSiNo('ml_condral'),
-    // LCA (solo si fue marcado arriba en estructuras afectadas)
+    // LCA
     lca_injerto: estructuras.includes('LCA')?val('ml_lca_injerto'):null,
-    lca_fijacion: estructuras.includes('LCA')?val('ml_lca_fijacion'):null,
-    // LCP
+    lca_fijacion_femoral: estructuras.includes('LCA')?val('ml_lca_fem'):null,
+    lca_fijacion_tibial: estructuras.includes('LCA')?val('ml_lca_tib'):null,
+    // LCP (incluye segunda fijación tibial)
     lcp_haz: estructuras.includes('LCP')?val('ml_lcp_haz'):null,
     lcp_tecnica: estructuras.includes('LCP')?val('ml_lcp_tecnica'):null,
     lcp_injerto: estructuras.includes('LCP')?val('ml_lcp_injerto'):null,
-    lcp_fijacion: estructuras.includes('LCP')?val('ml_lcp_fijacion'):null,
+    lcp_fijacion_femoral: estructuras.includes('LCP')?val('ml_lcp_fem'):null,
+    lcp_fijacion_tibial: estructuras.includes('LCP')?val('ml_lcp_tib'):null,
     lcp_segunda_fijacion: estructuras.includes('LCP')?boolFromSiNo('ml_lcp_2fijacion'):null,
     lcp_segunda_fijacion_tipo: (estructuras.includes('LCP')&&lcp2fijOn)?val('ml_lcp_2fijacion_tipo'):null,
-    // PLC
+    // PLC (varios injertos posibles)
     plc_tecnica: estructuras.includes('PLC')?val('ml_plc_tecnica'):null,
-    plc_injerto_fijacion: estructuras.includes('PLC')?val('ml_plc_injerto'):null,
-    // PMC
+    plc_injerto: estructuras.includes('PLC')?(checked('ml_plc_injerto').length?checked('ml_plc_injerto'):null):null,
+    plc_fijacion_femoral: estructuras.includes('PLC')?val('ml_plc_fem'):null,
+    plc_fijacion_tibial: estructuras.includes('PLC')?val('ml_plc_tib'):null,
+    // PMC (varios injertos posibles, solo si es reconstrucción)
     pmc_tipo: estructuras.includes('PMC')?val('ml_pmc_tipo'):null,
     pmc_tecnica: estructuras.includes('PMC')?val('ml_pmc_tecnica'):null,
     pmc_aislada: estructuras.includes('PMC')?boolFromSiNo('ml_pmc_aislada'):null,
-    pmc_injerto_fijacion: estructuras.includes('PMC')?val('ml_pmc_injerto'):null,
+    pmc_injerto: (estructuras.includes('PMC')&&val('ml_pmc_tipo')==='Reconstrucción con injerto')?(checked('ml_pmc_injerto').length?checked('ml_pmc_injerto'):null):null,
+    pmc_fijacion_femoral: estructuras.includes('PMC')?val('ml_pmc_fem'):null,
+    pmc_fijacion_tibial: estructuras.includes('PMC')?val('ml_pmc_tib'):null,
     ssd_pre: numOrNull('ml_ssd_pre'),
     ssd_post: numOrNull('ml_ssd_post'),
     inmovilizacion_tipo: val('ml_inmovilizacion'),
