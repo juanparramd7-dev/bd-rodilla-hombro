@@ -167,7 +167,7 @@ table.visits td{padding:6px 8px;border-bottom:0.5px solid var(--border)}
     <div class="card-h"><span class="n">1</span>Identificación</div>
     <div class="card-b">
       <div class="grid2">
-        <div class="field"><label>Código de estudio *</label><input id="codigo_estudio" placeholder="Ej: RH-0001"></div>
+        <div class="field"><label>Código de estudio *</label><div style="display:flex;gap:6px"><input id="codigo_estudio" placeholder="Ej: RH-0004" style="flex:1"><button type="button" class="expand-btn" onclick="generarCodigo()">Generar</button></div><p class="hint" style="margin-top:4px">Para un paciente nuevo, pulsa Generar. Para una visita de control, escribe el código del paciente.</p></div>
         <div class="field"><label>Institución</label>
           <select id="institucion"><option value="">Seleccionar</option><option>Clínica Imbanaco</option><option>Clínica MED</option><option>Fundación Valle del Lili</option><option>Hospital San Juan de Dios</option><option>Clínica Farallones</option><option>Clínica Palma Real</option><option>Sportsmeds</option><option>Otra</option></select>
         </div>
@@ -2718,6 +2718,27 @@ function collectModMecext(){
 const MOD_COLLECTORS={meniscal:collectModMeniscal, atr:collectModATR, lca:collectModLCA, multiligamentaria:collectModMultiligamentaria, mecext:collectModMecext};
 const MOD_TABLES={meniscal:'mod_meniscal', atr:'mod_atr', lca:'mod_lca', multiligamentaria:'mod_multiligamentaria', mecext:'mod_mecext'};
 
+// Código de estudio: el siguiente libre (la función de la base mira TODOS los códigos,
+// incluidos los que este usuario no puede ver, para no repetir ninguno).
+async function generarCodigo(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){showToast('Debes iniciar sesión');return;}
+  const {data,error}=await sb.rpc('siguiente_codigo_estudio');
+  if(error){showToast('No se pudo generar el código: '+error.message);return;}
+  document.getElementById('codigo_estudio').value=data;
+  showToast('Código generado: '+data);
+}
+// Un paciente NUEVO siempre empieza en visita Basal. Si el código ya tiene una Basal
+// guardada, es otro paciente: no se sobrescribe. Las visitas de control sí usan el código existente.
+async function codigoYaUsadoEnBasal(codigo){
+  const {data:pac,error:e1}=await sb.from('pacientes').select('id').eq('codigo_estudio',codigo).maybeSingle();
+  if(e1) throw e1;
+  if(!pac) return false;
+  const {data:bas,error:e2}=await sb.from('visitas').select('id').eq('paciente_id',pac.id).eq('tipo_visita','Basal').maybeSingle();
+  if(e2) throw e2;
+  return !!bas;
+}
+
 async function guardarVisita(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session){showToast('Debes iniciar sesión');return;}
@@ -2725,6 +2746,12 @@ async function guardarVisita(){
   if(!codigo){showToast('Falta el código de estudio');return;}
   const mod=window._currentModule;
   const collector=MOD_COLLECTORS[mod];
+  try{
+    if(window._currentVisit==='Basal' && await codigoYaUsadoEnBasal(codigo)){
+      showToast('Ese código ya pertenece a otro paciente. Pulsa "Generar" para un código nuevo.');
+      return;
+    }
+  }catch(e){ showToast('No se pudo verificar el código: '+(e.message||e)); return; }
   if(!collector){
     showToast('Este módulo aún no está conectado a Supabase — por ahora: LCA, Meniscal, ATR.');
     return;
